@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>鼓聲辨識測試 M0</title>
+<style>
+  body { font-family: sans-serif; max-width: 760px; margin: 16px auto; padding: 0 12px; }
+  button { font-size: 16px; padding: 8px 14px; margin: 4px 4px 4px 0; cursor: pointer; }
+  button.on { background: #ffd54f; }
+  #meter { height: 24px; background: #eee; position: relative; border: 1px solid #999; }
+  #bar { height: 100%; width: 0; background: #4caf50; }
+  #thLine { position: absolute; top: 0; bottom: 0; width: 2px; background: red; }
+  #big { font-size: 64px; font-weight: bold; text-align: center; height: 90px; line-height: 90px; }
+  .don { color: #d32f2f; } .ka { color: #1976d2; }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; }
+  td, th { border: 1px solid #ccc; padding: 2px 6px; text-align: right; }
+  #log { max-height: 260px; overflow-y: auto; }
+  .box { border: 1px solid #ccc; padding: 8px; margin: 8px 0; }
+  #status { color: #555; }
+</style>
+</head>
+<body>
+<h2>鼓聲辨識測試 M0</h2>
+
+<div class="box">
+  <button id="btnStart">1. 開啟麥克風</button>
+  <span id="status">尚未開啟</span>
+  <div id="meter"><div id="bar"></div><div id="thLine"></div></div>
+  <label>擊打門檻：<input type="range" id="th" min="0.005" max="0.5" step="0.005" value="0.05">
+    <span id="thVal">0.050</span></label>
+  （紅線＝門檻。安靜時綠條要低於紅線，敲鼓時要超過）
+  <br><label>音量偵測 <span id="clip"></span></label>
+</div>
+
+<div class="box">
+  <b>2. 收集樣本（校準）</b>：按下按鈕後敲鼓，每一下都會被標記為該類別。各敲 10 下以上。<br>
+  <button id="btnDon">標記為「咚」(鼓面)</button>
+  <button id="btnKa">標記為「咔」(鼓邊)</button>
+  <button id="btnTest">3. 測試辨識</button>
+  <button id="btnStop">暫停標記</button>
+  <div>咚樣本：<b id="nDon">0</b>　咔樣本：<b id="nKa">0</b>　
+    測試結果：<b id="acc">-</b></div>
+  <div style="font-size:13px">測試時可先按「咚」或「咔」核對鍵：
+    <label><input type="radio" name="truth" value="" checked>不核對</label>
+    <label><input type="radio" name="truth" value="D">我正在敲咚</label>
+    <label><input type="radio" name="truth" value="K">我正在敲咔</label>
+  </div>
+</div>
+
+<div id="big"></div>
+
+<div class="box">
+  <b>4. 延遲／節拍測試</b>：播放節拍器，跟著拍子敲，顯示平均偏差（正值＝偏晚）。<br>
+  BPM <input type="number" id="bpm" value="80" style="width:60px">
+  <button id="btnMetro">開始 16 拍</button>
+  <span id="metroRes"></span>
+</div>
+
+<div class="box">
+  <button id="btnCsv">匯出 CSV</button>
+  <button id="btnClear">清除全部</button>
+  <div id="log"><table><thead><tr>
+    <th>#</th><th>模式</th><th>標記</th><th>判定</th><th>峰值</th>
+    <th>低頻</th><th>高頻</th><th>高/低(dB)</th><th>重心Hz</th><th>衰減</th>
+  </tr></thead><tbody id="tbody"></tbody></table></div>
+</div>
+
+<script>
+// ---------- 參數 ----------
+const BLOCK = 256;          // 偵測區塊
+const WIN = 1024;           // 分析長度（約 21~23 ms）
+const REFRACTORY = 0.09;    // 擊打後 90 ms 不重複觸發
+
+let ctx, src, proc, sr;
+let threshold = 0.05;
+let mode = null;            // 'D' | 'K' | 'TEST' | null
+let samples = [];           // 全部紀錄
+let lastHit = -1;
+let prevRms = 0;
+let collecting = null;      // {buf, pos, t, peak}
+let preBuf = new Float32Array(BLOCK);
+let metro = null;           // {beats:[], hits:[]}
+
+const $ = id => document.getElementById(id);
+
+// ---------- 開啟麥克風 ----------
+$('btnStart').onclick = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    sr = ctx.sampleRate;
+    src = ctx.createMediaStreamSource(stream);
+    proc = ctx.createScriptProcessor(BLOCK, 1, 1);
+    proc.onaudioprocess = onAudio;
+    src.connect(proc);
+    proc.connect(ctx.destination); // 部分瀏覽器需接上才會執行（輸出為靜音）
+    const s = stream.getAudioTracks()[0].getSettings();
+    $('status').textContent = `已開啟 ✅ 取樣率 ${sr} Hz，基本延遲 ${(ctx.baseLatency*1000||0).toFixed(1)} ms，` +
+      `回音消除=${s.echoCancellation} 降噪=${s.noiseSuppression} 自動增益=${s.autoGainControl}`;
+  } catch (e) {
+    $('status').textContent = '❌ 無法開啟麥克風：' + e.name + ' ' + e.message;
+  }
+};
+
+$('th').oninput = e => { threshold = +e.target.value; $('thVal').textContent = threshold.toFixed(3); drawTh(); };
+function drawTh() { $('thLine').style.left = Math.min(100, threshold / 0.5 * 100) + '%'; }
+drawTh();
+
+function setMode(m, btn) {
+  mode = m;
+  ['btnDon','btnKa','btnTest'].forEach(id => $(id).classList.remove('on'));
+  if (btn) $(btn).classList.add('on');
+}
+$('btnDon').onclick = () => setMode('D', 'btnDon');
+$('btnKa').onclick = () => setMode('K', 'btnKa');
+$('btnTest').onclick = () => setMode('TEST', 'btnTest');
+$('btnStop').onclick = () => setMode(null);
+
+// ---------- 音訊處理 ----------
+let meterPeak = 0, clipCount = 0;
+function onAudio(e) {
+  const x = e.inputBuffer.getChannelData(0);
+  const tBlock = e.playbackTime !== undefined ? ctx.currentTime : ctx.currentTime;
+  let sum = 0, peak = 0;
+  for (let i = 0; i < x.length; i++) { sum += x[i]*x[i]; const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  const rms = Math.sqrt(sum / x.length);
+  meterPeak = Math.max(meterPeak * 0.9, rms);
+  if (peak > 0.99) clipCount++;
+
+  // 收集中：填滿分析窗
+  if (collecting) {
+    const c = collecting;
+    for (let i = 0; i < x.length && c.pos < WIN * 2; i++) {
+      c.buf[c.pos++] = x[i]; c.peak = Math.max(c.peak, Math.abs(x[i]));
+    }
+    if (c.pos >= WIN * 2) { analyze(c); collecting = null; }
+  } else {
+    // 偵測擊打：超過門檻且能量突然上升
+    const now = ctx.currentTime;
+    if (rms > threshold && rms > prevRms * 1.8 && now - lastHit > REFRACTORY) {
+      lastHit = now;
+      // 估算擊打起點：該區塊內第一個超過峰值一半的位置
+      let onsetIdx = 0;
+      for (let i = 0; i < x.length; i++) if (Math.abs(x[i]) > peak * 0.5) { onsetIdx = i; break; }
+      // 這個區塊在本次回呼時間之前約 BLOCK 個取樣
+      const tHit = now - (x.length - onsetIdx) / sr;
+      const buf = new Float32Array(WIN * 2);
+      let pos = 0;
+      for (let i = onsetIdx; i < x.length; i++) buf[pos++] = x[i];
+      collecting = { buf, pos, t: tHit, peak };
+    }
+  }
+  prevRms = rms;
+}
+
+// ---------- 特徵 ----------
+function fftMag(sig) {
+  const n = sig.length, re = new Float32Array(n), im = new Float32Array(n);
+  for (let i = 0; i < n; i++) re[i] = sig[i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)));
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+    if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k, b = a + len / 2;
+        const tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+        const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+      }
+    }
+  }
+  const mag = new Float32Array(n / 2);
+  for (let i = 0; i < n / 2; i++) mag[i] = re[i] * re[i] + im[i] * im[i];
+  return mag;
+}
+
+function analyze(c) {
+  const first = c.buf.subarray(0, WIN), second = c.buf.subarray(WIN, WIN * 2);
+  const mag = fftMag(first), hz = sr / WIN;
+  let low = 0, high = 0, tot = 0, wsum = 0;
+  for (let i = 1; i < mag.length; i++) {
+    const f = i * hz;
+    if (f >= 60 && f < 400) low += mag[i];
+    if (f >= 1500 && f < 6000) high += mag[i];
+    tot += mag[i]; wsum += f * mag[i];
+  }
+  const ratio = 10 * Math.log10((high + 1e-12) / (low + 1e-12));
+  const centroid = wsum / (tot + 1e-12);
+  const e1 = first.reduce((s, v) => s + v * v, 0), e2 = second.reduce((s, v) => s + v * v, 0);
+  const decay = 10 * Math.log10((e2 + 1e-12) / (e1 + 1e-12)); // 越負＝衰減越快
+  const s = { n: samples.length + 1, t: c.t, mode: mode || '-', label: '', pred: '',
+    peak: c.peak, low, high, ratio, centroid, decay };
+
+  if (mode === 'D' || mode === 'K') s.label = mode;
+  if (mode === 'TEST') {
+    const truth = document.querySelector('input[name=truth]:checked').value;
+    s.label = truth;
+    s.pred = classify(s);
+  }
+  if (metro) metro.hits.push(c.t);
+  samples.push(s);
+  postMessageToUI(s);
+}
+
+// 最近中心分類（特徵：高/低比、重心(kHz)、衰減）
+function feat(s) { return [s.ratio / 10, s.centroid / 1000, s.decay / 10]; }
+function classify(s) {
+  const D = samples.filter(x => x.mode === 'D'), K = samples.filter(x => x.mode === 'K');
+  if (D.length < 3 || K.length < 3) return '?';
+  const mean = arr => { const m = [0,0,0]; arr.forEach(x => feat(x).forEach((v,i)=>m[i]+=v/arr.length)); return m; };
+  const mD = mean(D), mK = mean(K), f = feat(s);
+  const dist = m => m.reduce((a, v, i) => a + (v - f[i]) ** 2, 0);
+  return dist(mD) <= dist(mK) ? 'D' : 'K';
+}
+
+// ---------- 介面 ----------
+function postMessageToUI(s) {
+  // ScriptProcessor 回呼在主執行緒，直接更新
+  const show = s.pred || s.label;
+  const big = $('big');
+  big.textContent = show === 'D' ? '咚' : show === 'K' ? '咔' : show === '?' ? '樣本不足' : '●';
+  big.className = show === 'D' ? 'don' : show === 'K' ? 'ka' : '';
+  setTimeout(() => { if (big.textContent) big.style.opacity = 1; }, 0);
+
+  $('nDon').textContent = samples.filter(x => x.mode === 'D').length;
+  $('nKa').textContent = samples.filter(x => x.mode === 'K').length;
+  const tested = samples.filter(x => x.mode === 'TEST' && x.label && x.pred && x.pred !== '?');
+  if (tested.length) {
+    const ok = tested.filter(x => x.label === x.pred).length;
+    $('acc').textContent = `${ok}/${tested.length}（${(ok / tested.length * 100).toFixed(0)}%）`;
+  }
+  const tr = document.createElement('tr');
+  const name = v => v === 'D' ? '咚' : v === 'K' ? '咔' : v;
+  tr.innerHTML = [s.n, s.mode === 'TEST' ? '測試' : s.mode === '-' ? '-' : '校準',
+    name(s.label), name(s.pred), s.peak.toFixed(2), s.low.toExponential(1), s.high.toExponential(1),
+    s.ratio.toFixed(1), s.centroid.toFixed(0), s.decay.toFixed(1)].map(v => `<td>${v}</td>`).join('');
+  if (s.pred && s.label && s.pred !== s.label && s.pred !== '?') tr.style.background = '#ffcdd2';
+  $('tbody').prepend(tr);
+}
+
+setInterval(() => {
+  $('bar').style.width = Math.min(100, meterPeak / 0.5 * 100) + '%';
+  $('clip').textContent = clipCount > 0 ? `⚠️ 爆音 ${clipCount} 次（請調低麥克風音量或拉遠）` : '正常';
+}, 50);
+
+// ---------- 節拍器延遲測試 ----------
+$('btnMetro').onclick = () => {
+  if (!ctx) { alert('請先開啟麥克風'); return; }
+  const bpm = +$('bpm').value || 80, iv = 60 / bpm, t0 = ctx.currentTime + 1;
+  const beats = [];
+  for (let i = 0; i < 16; i++) {
+    const t = t0 + i * iv; beats.push(t);
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = i % 4 === 0 ? 1500 : 1000;
+    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.06);
+  }
+  metro = { beats, hits: [] };
+  $('metroRes').textContent = '請跟著拍子敲（建議戴耳機，避免節拍聲被當成擊打）…';
+  setTimeout(() => {
+    const offs = [];
+    metro.hits.forEach(h => {
+      let best = null;
+      beats.forEach(b => { if (best === null || Math.abs(h - b) < Math.abs(best)) best = h - b; });
+      if (Math.abs(best) < iv / 2) offs.push(best * 1000);
+    });
+    if (!offs.length) { $('metroRes').textContent = '沒有偵測到擊打'; metro = null; return; }
+    const avg = offs.reduce((a, b) => a + b, 0) / offs.length;
+    const sd = Math.sqrt(offs.reduce((a, b) => a + (b - avg) ** 2, 0) / offs.length);
+    $('metroRes').textContent = `擊打 ${offs.length} 次，平均偏差 ${avg.toFixed(0)} ms，抖動(標準差) ${sd.toFixed(0)} ms`;
+    metro = null;
+  }, (16 * iv + 1.5) * 1000);
+};
+
+// ---------- 匯出 ----------
+$('btnCsv').onclick = () => {
+  const head = 'n,time,mode,label,pred,peak,low,high,ratio_db,centroid_hz,decay_db';
+  const rows = samples.map(s => [s.n, s.t.toFixed(4), s.mode, s.label, s.pred, s.peak.toFixed(4),
+    s.low, s.high, s.ratio.toFixed(2), s.centroid.toFixed(1), s.decay.toFixed(2)].join(','));
+  const blob = new Blob(['\ufeff' + [head, ...rows].join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'drum_samples.csv'; a.click();
+};
+$('btnClear').onclick = () => {
+  if (!confirm('確定清除所有樣本？')) return;
+  samples = []; $('tbody').innerHTML = ''; $('nDon').textContent = 0; $('nKa').textContent = 0;
+  $('acc').textContent = '-'; clipCount = 0; $('big').textContent = '';
+};
+</script>
+</body>
+</html>
