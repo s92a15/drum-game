@@ -2188,8 +2188,19 @@
           <button class="btn-action" id="btn-calib-reset">清除已儲存校準</button>
         </div>
 
+        <div class="row-field" style="background:#1a223c; border-color:#485686;">
+          <div>
+            <b style="color:var(--gold);">☁️ 雲端同步與共享設定</b>
+            <div style="font-size: 13px; color: var(--text-dim);" id="calib-cloud-status">每次開網頁自動讀取雲端試算表設定，亦可手動同步</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action" id="btn-calib-fetch-cloud">🔄 重新讀取雲端</button>
+            <button class="btn-action primary" id="btn-calib-save-cloud">☁️ 同步上傳至雲端</button>
+          </div>
+        </div>
+
         <div style="font-size: 13px; color: var(--gold); background: rgba(255, 211, 42, 0.1); border: 1px solid rgba(255, 211, 42, 0.35); padding: 8px 14px; border-radius: 10px; margin-top: 4px;">
-          💾 樣本自動儲存：所有咚／咔特徵樣本與靈敏度已自動保存在本機瀏覽器（LocalStorage）中，重新整理網頁無需重新敲擊校準！
+          💡 雲端自動讀取：開啟網頁時會自動從 Google 試算表雲端下載最新特徵並存於本機。老師只要在一台電腦校準並上傳雲端，全班所有裝置皆可自動套用！
         </div>
       </div>
 
@@ -2721,6 +2732,22 @@ let metroTestState = null;
 const WIN = 1024;
 const REFRACTORY = 0.085;
 
+// 內建標準十鼓聲學特徵模型 (開箱即用：即使未校準亦可精準辨識)
+const DEFAULT_AUDIO_SAMPLES = [
+  // 鼓面（咚）：低頻為主，比值低 (< -8dB)，頻譜重心約 150-280Hz
+  { mode: "D", ratio: -12.4, centroid: 180, decay: -1.8, t: 0 },
+  { mode: "D", ratio: -10.2, centroid: 220, decay: -2.1, t: 0 },
+  { mode: "D", ratio: -14.6, centroid: 160, decay: -1.5, t: 0 },
+  { mode: "D", ratio: -9.5,  centroid: 250, decay: -2.3, t: 0 },
+  { mode: "D", ratio: -11.8, centroid: 195, decay: -1.9, t: 0 },
+  // 鼓邊（咔）：高頻鼓框木音為主，比值高 (> 3dB)，頻譜重心約 3000-4600Hz
+  { mode: "K", ratio: 6.8,  centroid: 3400, decay: -5.2, t: 0 },
+  { mode: "K", ratio: 8.4,  centroid: 3900, decay: -6.1, t: 0 },
+  { mode: "K", ratio: 5.2,  centroid: 3100, decay: -4.8, t: 0 },
+  { mode: "K", ratio: 9.6,  centroid: 4300, decay: -6.6, t: 0 },
+  { mode: "K", ratio: 7.5,  centroid: 3650, decay: -5.4, t: 0 }
+];
+
 // 本機 LocalStorage 儲存鍵值
 const CALIB_STORAGE_KEY = "shigu_drum_calibration_data";
 
@@ -2766,6 +2793,72 @@ function loadCalibrationData() {
     }
   } catch (err) {
     console.warn("讀取本機鼓聲校準記錄失敗", err);
+  }
+}
+
+// 從 Google 試算表雲端自動讀取最新校準
+async function fetchCalibrationFromCloud() {
+  if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "正在檢查雲端試算表最新鼓聲樣本...";
+  try {
+    const res = await fetch(GAS_API_URL + "?action=getCalibration", { mode: "cors" });
+    const json = await res.json();
+    if (json && json.status === "success" && json.data && Array.isArray(json.data.samples) && json.data.samples.length > 0) {
+      audioSamples = json.data.samples;
+      if (typeof json.data.threshold === "number") threshold = json.data.threshold;
+      if (typeof json.data.offsetMs === "number") latencyOffsetMs = json.data.offsetMs;
+      saveCalibrationData();
+      updateCalibUI();
+      const nDon = audioSamples.filter(x => x.mode === "D").length;
+      const nKa = audioSamples.filter(x => x.mode === "K").length;
+      if ($("calib-live-result")) {
+        $("calib-live-result").textContent = `☁️ 已同步雲端樣本 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
+      }
+      if ($("calib-cloud-status")) {
+        $("calib-cloud-status").textContent = `已從雲端載入最新校準 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
+      }
+      return true;
+    } else {
+      if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "雲端尚未建立校準樣本，目前使用本機記錄與標準模型";
+    }
+  } catch (err) {
+    if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "雲端連線受限，目前使用本機記錄與標準模型";
+  }
+  return false;
+}
+
+// 儲存目前鼓聲校準至 Google 試算表雲端
+async function saveCalibrationToCloud() {
+  if (audioSamples.length === 0) {
+    alert("目前尚未錄製任何咚或咔樣本，請先錄製後再上傳！");
+    return false;
+  }
+  if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "正在同步發送至 Google 試算表雲端...";
+  try {
+    const payload = {
+      action: "saveCalibration",
+      calibration: {
+        samples: audioSamples,
+        threshold: threshold,
+        offsetMs: latencyOffsetMs,
+        updated_at: new Date().toISOString()
+      }
+    };
+    await fetch(GAS_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    saveCalibrationData();
+    playSfx("clear");
+    const nDon = audioSamples.filter(x => x.mode === "D").length;
+    const nKa = audioSamples.filter(x => x.mode === "K").length;
+    if ($("calib-cloud-status")) $("calib-cloud-status").textContent = `☁️ 已同步至試算表 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
+    alert(`成功同步！\n已將 ${nDon} 筆咚與 ${nKa} 筆咔樣本儲存至 Google 試算表。\n其他學生或裝置開啟此網頁時將自動讀取這組特徵。`);
+    return true;
+  } catch (err) {
+    alert("上傳雲端失敗，請確認網路連線或試算表共用權限。");
+    return false;
   }
 }
 
@@ -2895,8 +2988,10 @@ function analyzeDrumHit(c) {
 }
 
 function classifyHit(s) {
-  const D = audioSamples.filter(x => x.mode === "D");
-  const K = audioSamples.filter(x => x.mode === "K");
+  // 若自訂錄製樣本不足 6 筆，自動混入內建標準十鼓聲學模型作為基底特徵
+  const effectiveSamples = audioSamples.length >= 6 ? audioSamples : [...audioSamples, ...DEFAULT_AUDIO_SAMPLES];
+  const D = effectiveSamples.filter(x => x.mode === "D");
+  const K = effectiveSamples.filter(x => x.mode === "K");
   if (D.length < 3 || K.length < 3) {
     return s.ratio < -4 ? "D" : "K";
   }
@@ -2916,6 +3011,7 @@ function updateCalibUI() {
   $("calib-n-ka").textContent = audioSamples.filter(x => x.mode === "K").length;
 }
 loadCalibrationData();
+fetchCalibrationFromCloud();
 
 // ==================== 4. 遊戲節奏引擎與 Kenney 粒子系統 ====================
 let activeNotes = [];
@@ -4121,6 +4217,14 @@ $("btn-calib-reset").onclick = () => {
   saveCalibrationData();
   updateCalibUI();
   $("calib-live-result").textContent = "已清除本機校準，可重新敲擊錄製";
+};
+$("btn-calib-fetch-cloud").onclick = async () => {
+  playSfx("click");
+  await fetchCalibrationFromCloud();
+};
+$("btn-calib-save-cloud").onclick = async () => {
+  playSfx("click");
+  await saveCalibrationToCloud();
 };
 
 // 16 拍節拍器延遲自動測定
