@@ -315,6 +315,8 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
     display: flex;
     align-items: center;
+    padding: 8px;
+    box-sizing: border-box;
   }
 
   /* 左側太鼓真實圖層與打擊台 (osu!resources open-source Taiko Drum) */
@@ -1131,6 +1133,46 @@
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
   }
+  .brush-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+  .brush-dot.note-j {
+    border: 2px solid #ff4757;
+    background: linear-gradient(to right, transparent 50%, #ff4757 50%);
+  }
+  .brush-dot.note-f {
+    border: 2px solid #ff4757;
+    background: linear-gradient(to right, #ff4757 50%, transparent 50%);
+  }
+  .brush-dot.note-fj {
+    background: #ff4757;
+    border: 2px solid #ffd32a;
+  }
+  .brush-dot.note-k {
+    border: 1.5px solid rgba(46, 134, 222, 0.4);
+    border-right: 3.5px solid #2e86de;
+  }
+  .brush-dot.note-d {
+    border: 1.5px solid rgba(46, 134, 222, 0.4);
+    border-left: 3.5px solid #2e86de;
+  }
+  .brush-dot.note-dk {
+    border: 3.5px solid #2e86de;
+  }
+  .brush-dot.note-rest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px dashed #556285;
+  }
 
   /* 核心小節編輯工作區 (滾動區) */
   .editor-bars-scroll {
@@ -1232,25 +1274,45 @@
     border-color: #2e86de;
   }
   .grid-slot-marker {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-display);
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 900;
     color: #ffffff;
+    position: relative;
+    overflow: hidden;
   }
-  .grid-slot-marker.don {
+  /* 咚系列網格圖示 */
+  .grid-slot-marker.note-j {
+    border: 2px solid #ff4757;
+    background: linear-gradient(to right, transparent 50%, #ff4757 50%);
+  }
+  .grid-slot-marker.note-f {
+    border: 2px solid #ff4757;
+    background: linear-gradient(to right, #ff4757 50%, transparent 50%);
+  }
+  .grid-slot-marker.note-fj {
     background: #ff4757;
+    border: 2px solid #ffd32a;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
-  .grid-slot-marker.ka {
-    background: #2e86de;
+  /* 咔系列網格圖示 */
+  .grid-slot-marker.note-k {
+    border: 2px solid rgba(46, 134, 222, 0.35);
+    border-right: 4px solid #2e86de;
+  }
+  .grid-slot-marker.note-d {
+    border: 2px solid rgba(46, 134, 222, 0.35);
+    border-left: 4px solid #2e86de;
+  }
+  .grid-slot-marker.note-dk {
+    border: 4px solid #2e86de;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-    border: 2px solid #ffffff;
   }
 
   /* 底部儲存與試聽列 */
@@ -1816,6 +1878,17 @@
 
         <div class="row-field">
           <div>
+            <b>左右手與雙手詳細記譜開關</b>
+            <div style="font-size: 13px; color: var(--text-dim);">初學模式只分「咚／咔」；專業模式顯示左半圓、右半圓與雙手整圓</div>
+          </div>
+          <select id="select-notation-mode" style="background:#0f1322; color:#fff; padding:8px 12px; border-radius:8px; border:2px solid #455280; font-weight:700;">
+            <option value="simple">初學單純模式（僅分咚/咔整圓）</option>
+            <option value="detailed" selected>進階手序模式（區分左手/右手/雙手）</option>
+          </select>
+        </div>
+
+        <div class="row-field">
+          <div>
             <b>舞台主角與吉祥物夥伴</b>
             <div style="font-size: 13px; color: var(--text-dim);">選擇陪學生練習的 Kenney 開源角色</div>
           </div>
@@ -1972,25 +2045,38 @@
       <div class="brush-selector-bar">
         <div class="brush-tools">
           <span style="font-size:14px; font-weight:700; color:var(--text-dim);">鼓點筆刷：</span>
-          <button class="brush-btn active" id="brush-don" data-brush="D" title="快捷鍵：1">
-            <img src="assets/ui/round_red.png" alt="">
-            <span style="color:#ff6b81;">咚 (鼓面)</span>
-            <span class="shortcut-badge">鍵盤 1</span>
+          <button class="brush-btn active" id="brush-j" data-brush="j" title="快捷鍵：J">
+            <span class="brush-dot note-j"></span>
+            <span style="color:#ff6b81;">右咚 (J)</span>
           </button>
-          <button class="brush-btn" id="brush-ka" data-brush="K" title="快捷鍵：2">
-            <img src="assets/ui/round_blue.png" alt="">
-            <span style="color:#54a0ff;">咔 (鼓邊)</span>
-            <span class="shortcut-badge">鍵盤 2</span>
+          <button class="brush-btn" id="brush-f" data-brush="f" title="快捷鍵：F">
+            <span class="brush-dot note-f"></span>
+            <span style="color:#ff6b81;">左咚 (F)</span>
+          </button>
+          <button class="brush-btn" id="brush-fj" data-brush="fj" title="快捷鍵：F+J">
+            <span class="brush-dot note-fj"></span>
+            <span style="color:#ffd32a;">雙手咚 (F+J)</span>
+          </button>
+          <button class="brush-btn" id="brush-k" data-brush="k" title="快捷鍵：K">
+            <span class="brush-dot note-k"></span>
+            <span style="color:#54a0ff;">右咔 (K)</span>
+          </button>
+          <button class="brush-btn" id="brush-d" data-brush="d" title="快捷鍵：D">
+            <span class="brush-dot note-d"></span>
+            <span style="color:#54a0ff;">左咔 (D)</span>
+          </button>
+          <button class="brush-btn" id="brush-dk" data-brush="dk" title="快捷鍵：D+K">
+            <span class="brush-dot note-dk"></span>
+            <span style="color:#2ed573;">雙手咔 (D+K)</span>
           </button>
           <button class="brush-btn" id="brush-erase" data-brush="." title="快捷鍵：空白鍵">
-            <span style="font-size:16px;">🧹</span>
-            <span>休止 (空拍)</span>
-            <span class="shortcut-badge">空白鍵 Space</span>
+            <span class="brush-dot note-rest">∅</span>
+            <span>休止 (Space)</span>
           </button>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span style="font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
-            <span>滑鼠停留按鍵輸入即自動往後跳拍 ·</span>
+            <span>按鍵 F/J=左/右咚 · D/K=左/右咔 · F+J/D+K=雙手 · Space=休止 ·</span>
             <span class="shortcut-badge">N</span>
             <span>新增小節</span>
           </span>
@@ -2218,6 +2304,7 @@ async function saveSongToGoogleSheet(song) {
 let currentSongIndex = 0;
 let gameState = "IDLE";
 let inputMode = "solo";
+let notationMode = "detailed"; // 'simple': 初學模式（僅咚咔整圓） | 'detailed': 進階手序模式（左右手半圓、雙手整圓）
 let judgeWindow = { perfect: 0.065, good: 0.125 };
 let latencyOffsetMs = 0;
 let charSkin = {
@@ -2441,6 +2528,64 @@ function spawnHitParticles(x, y, isPerfect) {
   }
 }
 
+// 將小節字串或逗號分隔字串拆解為 token 陣列
+function parseBarStringToTokens(bar, grid = 16) {
+  if (Array.isArray(bar)) {
+    const arr = [...bar];
+    while (arr.length < grid) arr.push(".");
+    return arr.slice(0, grid);
+  }
+  if (typeof bar !== "string") return Array(grid).fill(".");
+
+  // 若含有逗號則以逗號分割
+  if (bar.includes(",")) {
+    const arr = bar.split(",").map(s => s.trim() || ".");
+    while (arr.length < grid) arr.push(".");
+    return arr.slice(0, grid);
+  }
+
+  // 否則支援連字符解析（處理 fj, dk 與單字元）
+  const tokens = [];
+  let i = 0;
+  while (i < bar.length) {
+    if (bar.startsWith("fj", i)) {
+      tokens.push("fj");
+      i += 2;
+    } else if (bar.startsWith("dk", i)) {
+      tokens.push("dk");
+      i += 2;
+    } else {
+      tokens.push(bar[i]);
+      i += 1;
+    }
+  }
+  while (tokens.length < grid) tokens.push(".");
+  return tokens.slice(0, grid);
+}
+
+// 將 token 陣列序列化回小節字串（含有多字元記號或手序代碼時自動使用逗號隔開以防二義性）
+function formatBarTokensToString(tokens) {
+  const needsComma = tokens.some(t => t.length > 1 || t === "f" || t === "j" || t === "d" || t === "k");
+  return needsComma ? tokens.join(",") : tokens.join("");
+}
+
+function normalizeNoteCode(ch) {
+  if (!ch || ch === ".") return ".";
+  if (ch === "D") return "j"; // 舊版咚對應為右手咚
+  if (ch === "K") return "k"; // 舊版咔對應為右手咔
+  return ch;
+}
+
+// 判斷是否為咚音色（不論左右手或雙手）
+function isDonType(type) {
+  return type === "f" || type === "j" || type === "fj" || type === "D";
+}
+
+// 判斷是否為咔音色（不論左右手或雙手）
+function isKaType(type) {
+  return type === "d" || type === "k" || type === "dk" || type === "K";
+}
+
 function loadSong(song) {
   activeNotes = [];
   barLines = [];
@@ -2458,14 +2603,16 @@ function loadSong(song) {
     let currTime = baseOffset;
     for (let b = startBarIdx; b < endBarIdx; b++) {
       if (b >= song.pattern.length) break;
-      const barStr = song.pattern[b];
+      const barRaw = song.pattern[b];
+      const barTokens = Array.isArray(barRaw) ? barRaw : parseBarStringToTokens(barRaw, song.grid);
       const isDemo = hasDemo && (b === demoBar);
 
       barLines.push(currTime);
 
-      for (let i = 0; i < barStr.length; i++) {
-        const ch = barStr[i];
-        if (ch === "D" || ch === "K") {
+      for (let i = 0; i < barTokens.length; i++) {
+        const rawCh = barTokens[i];
+        const ch = normalizeNoteCode(rawCh);
+        if (ch !== ".") {
           activeNotes.push({
             t: currTime + i * secPerGrid,
             type: ch,
@@ -2479,12 +2626,14 @@ function loadSong(song) {
     }
   } else {
     // 正常整首模式
-    song.pattern.forEach((barStr, barIdx) => {
+    song.pattern.forEach((barRaw, barIdx) => {
       const barTime = baseOffset + barIdx * song.beats_per_bar * secPerBeat;
+      const barTokens = Array.isArray(barRaw) ? barRaw : parseBarStringToTokens(barRaw, song.grid);
       barLines.push(barTime);
-      for (let i = 0; i < barStr.length; i++) {
-        const ch = barStr[i];
-        if (ch === "D" || ch === "K") {
+      for (let i = 0; i < barTokens.length; i++) {
+        const rawCh = barTokens[i];
+        const ch = normalizeNoteCode(rawCh);
+        if (ch !== ".") {
           const noteTime = barTime + i * secPerGrid;
           activeNotes.push({
             t: noteTime,
@@ -2583,8 +2732,9 @@ function gameLoop(nowPerf) {
       if (note.isDemo && !note.playedDemo && elapsed >= note.t) {
         note.playedDemo = true;
         note.state = "demo_hit";
-        playSfx(note.type === "D" ? "don" : "ka");
-        triggerDrumVisual(note.type);
+        const isDon = isDonType(note.type);
+        playSfx(isDon ? (note.type === "fj" ? "donStrong" : "don") : (note.type === "dk" ? "kaStrong" : "ka"));
+        triggerDrumVisual(isDon ? "D" : "K");
         spawnHitParticles(90, canvas.height / 2, true);
       }
     }
@@ -2619,34 +2769,142 @@ function renderHighway(elapsed, dt) {
     ctx.stroke();
   }
 
-  // 2. 音符 (使用 Kenney 立體圓形寶石按鈕素材 + 咚/咔字樣)
+  // 2. 音符渲染 (支援初學簡單模式 vs 進階半圓/整圓手序模式)
   for (const note of activeNotes) {
     if (note.state !== "active") continue;
     const x = targetX + (note.t - elapsed) * pixelsPerSec;
     if (x > canvas.width + 60 || x < -60) continue;
 
-    const r = 42;
-    const sprite = note.type === "D" ? SPRITES.noteDon : SPRITES.noteKa;
+    const r = 38;
+    const isDon = isDonType(note.type);
+    const isKa = isKaType(note.type);
+    const nType = note.type;
+
     ctx.save();
+    if (note.isDemo) ctx.globalAlpha = 0.85;
 
-    // 若為示範小節的音符，給予柔和半透明與金色光環，直觀提示
-    if (note.isDemo) {
-      ctx.globalAlpha = 0.85;
-    }
+    if (notationMode === "simple") {
+      // ===== 初學單純模式：只分咚/咔整圓 =====
+      const sprite = isDon ? SPRITES.noteDon : SPRITES.noteKa;
+      if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+        ctx.drawImage(sprite, x - r, centerY - r, r * 2, r * 2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, centerY, r, 0, Math.PI * 2);
+        ctx.fillStyle = isDon ? "#ff4757" : "#2e86de";
+        ctx.fill();
+      }
+      if (isKa) {
+        ctx.beginPath();
+        ctx.arc(x, centerY, r * 0.7, 0, Math.PI * 2);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+      }
+      ctx.font = '900 24px "Zen Maru Gothic", "Noto Sans TC", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "rgba(18, 22, 38, 0.85)";
+      ctx.strokeText(isDon ? "咚" : "咔", x, centerY - 1);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(isDon ? "咚" : "咔", x, centerY - 1);
 
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      ctx.drawImage(sprite, x - r, centerY - r, r * 2, r * 2);
     } else {
-      ctx.beginPath();
-      ctx.arc(x, centerY, 36, 0, Math.PI * 2);
-      ctx.fillStyle = note.type === "D" ? "#ff4757" : "#2e86de";
-      ctx.fill();
+      // ===== 進階手序模式：外框顏色一致且較細，內部區分左右手/雙手 =====
+      if (isDon) {
+        // 咚系列：完整紅色細外框 (定位中心點)
+        ctx.beginPath();
+        ctx.arc(x, centerY, r, 0, Math.PI * 2);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#ff4757";
+        ctx.fillStyle = "rgba(15, 19, 34, 0.7)";
+        ctx.fill();
+        ctx.stroke();
+
+        // 內部實心半圓或整圓
+        if (nType === "fj") {
+          // 雙手咚：整顆填滿紅色實心 + 金色亮環
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, 0, Math.PI * 2);
+          ctx.fillStyle = "#ff4757";
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#ffd32a";
+          ctx.stroke();
+        } else if (nType === "f") {
+          // 左咚：左半圓填滿紅色實心
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, Math.PI * 0.5, Math.PI * 1.5, false);
+          ctx.closePath();
+          ctx.fillStyle = "#ff4757";
+          ctx.fill();
+        } else {
+          // 右咚 (j 或預設)：右半圓填滿紅色實心
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, Math.PI * 1.5, Math.PI * 0.5, false);
+          ctx.closePath();
+          ctx.fillStyle = "#ff4757";
+          ctx.fill();
+        }
+
+        // 文字標示
+        ctx.font = '900 20px "Zen Maru Gothic", "Noto Sans TC", sans-serif';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 4;
+        ctx.fillText(nType === "fj" ? "雙" : (nType === "f" ? "左" : "右"), x, centerY - 1);
+
+      } else if (isKa) {
+        // 咔系列：完整藍色細外框 (定位中心點)
+        ctx.beginPath();
+        ctx.arc(x, centerY, r, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(46, 134, 222, 0.4)";
+        ctx.fillStyle = "rgba(15, 19, 34, 0.85)";
+        ctx.fill();
+        ctx.stroke();
+
+        if (nType === "dk") {
+          // 雙手咔：整個圓周完整加粗亮藍邊框 (內部鏤空)
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, 0, Math.PI * 2);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = "#2e86de";
+          ctx.stroke();
+        } else if (nType === "d") {
+          // 左咔：左半圓弧邊框加粗
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, Math.PI * 0.5, Math.PI * 1.5, false);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = "#2e86de";
+          ctx.stroke();
+        } else {
+          // 右咔 (k 或預設)：右半圓弧邊框加粗
+          ctx.beginPath();
+          ctx.arc(x, centerY, r - 2, Math.PI * 1.5, Math.PI * 0.5, false);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = "#2e86de";
+          ctx.stroke();
+        }
+
+        // 文字標示
+        ctx.font = '900 19px "Zen Maru Gothic", "Noto Sans TC", sans-serif';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#a8d8ff";
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 4;
+        ctx.fillText(nType === "dk" ? "雙" : (nType === "d" ? "左" : "右"), x, centerY - 1);
+      }
     }
 
-    // 示範音符外加金色虛線環標示
+    // 示範音符金色外環虛線提示
     if (note.isDemo) {
       ctx.beginPath();
-      ctx.arc(x, centerY, 46, 0, Math.PI * 2);
+      ctx.arc(x, centerY, r + 7, 0, Math.PI * 2);
       ctx.lineWidth = 3;
       ctx.setLineDash([6, 4]);
       ctx.strokeStyle = "#ffd32a";
@@ -2654,23 +2912,6 @@ function renderHighway(elapsed, dt) {
       ctx.setLineDash([]);
     }
 
-    // 咔額外加上白色內環，確保形狀與咚明顯區隔
-    if (note.type === "K") {
-      ctx.beginPath();
-      ctx.arc(x, centerY, 27, 0, Math.PI * 2);
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = "#ffffff";
-      ctx.stroke();
-    }
-
-    ctx.font = '900 26px "Zen Maru Gothic", "Noto Sans TC", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = "rgba(18, 22, 38, 0.85)";
-    ctx.strokeText(note.type === "D" ? "咚" : "咔", x, centerY - 1);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(note.type === "D" ? "咚" : "咔", x, centerY - 1);
     ctx.restore();
   }
 
@@ -2726,10 +2967,11 @@ function triggerDrumVisual(type) {
 }
 
 function handlePlayerHit(type, hitTime, fromMic = false) {
+  const isHitDon = isDonType(type);
   if (!fromMic) {
-    playSfx(type === "D" ? "don" : "ka");
+    playSfx(isHitDon ? "don" : "ka");
   }
-  triggerDrumVisual(type);
+  triggerDrumVisual(isHitDon ? "D" : "K");
 
   const elapsed = hitTime - gameStartTime;
   let closest = null;
@@ -2751,7 +2993,7 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
   const target = $("target-station");
   target.classList.remove("pulse-don", "pulse-ka");
   void target.offsetWidth;
-  target.classList.add(type === "D" ? "pulse-don" : "pulse-ka");
+  target.classList.add(isHitDon ? "pulse-don" : "pulse-ka");
 
   const drummer = $("hero-drummer");
   drummer.src = charSkin.hit;
@@ -2766,7 +3008,8 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
     timingDiffs.push(rawDiffMs);
     updateTimingNeedle(rawDiffMs);
 
-    const matchType = (inputMode === "team") || (closest.type === type);
+    // 演奏模式下判定咚/咔吻合即可，學生無需區分左右手
+    const matchType = (inputMode === "team") || (isDonType(closest.type) === isHitDon);
     if (matchType) {
       if (minDiff <= judgeWindow.perfect) {
         closest.state = "perfect";
@@ -2864,6 +3107,10 @@ function endGame() {
 // ==================== 5. 鍵盤備援輸入 ====================
 window.addEventListener("keydown", e => {
   if (e.repeat) return;
+  // 若編輯器或輸入框處於作用中，不觸發遊戲擊打
+  if ($("modal-editor") && $("modal-editor").classList.contains("active")) return;
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+
   const key = e.key.toLowerCase();
   const now = sfxCtx ? sfxCtx.currentTime : performance.now() / 1000;
   if (key === "f" || key === "j") {
@@ -3046,6 +3293,10 @@ $("select-window-mode").onchange = e => {
   else judgeWindow = { perfect: 0.065, good: 0.125 };
 };
 
+$("select-notation-mode").onchange = e => {
+  notationMode = e.target.value;
+};
+
 $("select-char-skin").onchange = e => {
   const v = e.target.value;
   if (v === "female_chick") {
@@ -3067,7 +3318,7 @@ $("slider-offset").oninput = e => {
 };
 
 // ==================== 7. 老師圖像化曲譜編輯器邏輯 ====================
-let currentBrush = "D"; // 'D', 'K', '.'
+let currentBrush = "j"; // 'j', 'f', 'fj', 'k', 'd', 'dk', '.'
 let editingSong = null;
 let edPreviewTimer = null;
 let hoveredSlot = null; // 記錄目前滑鼠游標停留在哪一個格子 { barIdx, slotIdx }
@@ -3188,10 +3439,8 @@ function renderEditorBars() {
   const grid = parseInt($("ed-grid").value) || 16;
   const beats = parseInt($("ed-beats").value) || 4;
 
-  editingSong.pattern.forEach((barStr, barIdx) => {
-    // 補齊長度
-    let fullBar = barStr.padEnd(grid, ".");
-    if (fullBar.length > grid) fullBar = fullBar.slice(0, grid);
+  editingSong.pattern.forEach((barRaw, barIdx) => {
+    const barTokens = parseBarStringToTokens(barRaw, grid);
 
     const card = document.createElement("div");
     card.className = "bar-row-card";
@@ -3218,7 +3467,8 @@ function renderEditorBars() {
     const slotsPerBeat = grid / beats;
 
     for (let i = 0; i < grid; i++) {
-      const char = fullBar[i] || ".";
+      const rawToken = barTokens[i] || ".";
+      const token = normalizeNoteCode(rawToken);
       const slot = document.createElement("div");
       slot.className = "grid-slot";
       slot.dataset.bar = barIdx;
@@ -3229,12 +3479,39 @@ function renderEditorBars() {
         slot.classList.add("cursor-active");
       }
 
-      if (char === "D") {
+      const isDon = isDonType(token);
+      const isKa = isKaType(token);
+
+      if (isDon) {
         slot.classList.add("filled-don");
-        slot.innerHTML = `<div class="grid-slot-marker don">咚</div>`;
-      } else if (char === "K") {
+        let cls = "note-j";
+        let label = "右";
+        let title = "右咚 (J)";
+        if (token === "f") {
+          cls = "note-f";
+          label = "左";
+          title = "左咚 (F)";
+        } else if (token === "fj" || token === "D") {
+          cls = "note-fj";
+          label = "雙";
+          title = "雙手咚 (F+J)";
+        }
+        slot.innerHTML = `<div class="grid-slot-marker ${cls}" title="${title}">${label}</div>`;
+      } else if (isKa) {
         slot.classList.add("filled-ka");
-        slot.innerHTML = `<div class="grid-slot-marker ka">咔</div>`;
+        let cls = "note-k";
+        let label = "右";
+        let title = "右咔 (K)";
+        if (token === "d") {
+          cls = "note-d";
+          label = "左";
+          title = "左咔 (D)";
+        } else if (token === "dk" || token === "K") {
+          cls = "note-dk";
+          label = "雙";
+          title = "雙手咔 (D+K)";
+        }
+        slot.innerHTML = `<div class="grid-slot-marker ${cls}" title="${title}">${label}</div>`;
       }
 
       // 滑鼠懸停標記游標位置
@@ -3245,9 +3522,9 @@ function renderEditorBars() {
 
       slot.onclick = () => {
         hoveredSlot = { barIdx, slotIdx: i };
-        let nextChar = currentBrush;
-        if (char === currentBrush) nextChar = ".";
-        applyNoteToSlot(barIdx, i, nextChar, true);
+        let nextToken = currentBrush;
+        if (token === currentBrush) nextToken = ".";
+        applyNoteToSlot(barIdx, i, nextToken, true);
       };
       slotsGrid.appendChild(slot);
     }
@@ -3294,17 +3571,21 @@ function updateCursorVisual() {
   });
 }
 
-// 寫入鼓點並自動跳到下一拍 (方便老師連續盲打)
-function applyNoteToSlot(barIdx, slotIdx, char, autoAdvance = true) {
+// 寫入鼓點並自動跳到下一拍 (方便老師以鍵盤連續快編)
+function applyNoteToSlot(barIdx, slotIdx, noteCode, autoAdvance = true) {
   const grid = parseInt($("ed-grid").value) || 16;
-  let fullBar = (editingSong.pattern[barIdx] || "").padEnd(grid, ".");
-  const arr = fullBar.split("");
-  arr[slotIdx] = char;
-  editingSong.pattern[barIdx] = arr.join("");
+  const rawBar = editingSong.pattern[barIdx];
+  const tokens = parseBarStringToTokens(rawBar, grid);
+  tokens[slotIdx] = noteCode;
+  editingSong.pattern[barIdx] = formatBarTokensToString(tokens);
 
-  if (char === "D") playSfx("don");
-  else if (char === "K") playSfx("ka");
-  else playSfx("click");
+  if (isDonType(noteCode)) {
+    playSfx(noteCode === "fj" ? "donStrong" : "don");
+  } else if (isKaType(noteCode)) {
+    playSfx(noteCode === "dk" ? "kaStrong" : "ka");
+  } else {
+    playSfx("click");
+  }
 
   // 自動往下一格移動
   if (autoAdvance) {
@@ -3333,13 +3614,18 @@ function applyNoteToSlot(barIdx, slotIdx, char, autoAdvance = true) {
 function playSingleBar(barStr, bpm) {
   const ctx = ensureAudioContext();
   const secPerBeat = 60 / bpm;
-  const grid = barStr.length;
-  const secPerGrid = (secPerBeat * 4) / grid;
+  const grid = parseInt($("ed-grid").value) || 16;
+  const beats = parseInt($("ed-beats").value) || 4;
+  const tokens = parseBarStringToTokens(barStr, grid);
+  const secPerGrid = (secPerBeat * beats) / grid;
   const now = ctx.currentTime + 0.1;
   for (let i = 0; i < grid; i++) {
-    const ch = barStr[i];
-    if (ch === "D") playSfx("don", now + i * secPerGrid);
-    else if (ch === "K") playSfx("ka", now + i * secPerGrid);
+    const ch = tokens[i];
+    if (isDonType(ch)) {
+      playSfx(ch === "fj" ? "donStrong" : "don", now + i * secPerGrid);
+    } else if (isKaType(ch)) {
+      playSfx(ch === "dk" ? "kaStrong" : "ka", now + i * secPerGrid);
+    }
   }
 }
 
@@ -3368,31 +3654,113 @@ function addNewMeasure() {
   container.scrollTop = container.scrollHeight;
 }
 
-// 快捷鍵支援：在編輯器開啟時，按「1」=咚、「2」=咔、「空白鍵」=休息，並自動跳到下一拍；按「N」=新增小節
+// ==================== 編輯器快捷鍵與雙手組合鍵支援 ====================
+// F=左咚、J=右咚、F+J=雙手咚、D=左咔、K=右咔、D+K=雙手咔、空白鍵=休止、N=新增小節
+const activeEditorKeys = new Set();
+let chordTimer = null;
+let pendingChordKeys = new Set();
+
+function flushChord() {
+  if (pendingChordKeys.size === 0) return;
+  const keys = Array.from(pendingChordKeys);
+  pendingChordKeys.clear();
+
+  let targetNote = ".";
+  if (keys.includes("f") && keys.includes("j")) {
+    targetNote = "fj";
+  } else if (keys.includes("d") && keys.includes("k")) {
+    targetNote = "dk";
+  } else if (keys.includes("f")) {
+    targetNote = "f";
+  } else if (keys.includes("j")) {
+    targetNote = "j";
+  } else if (keys.includes("d")) {
+    targetNote = "d";
+  } else if (keys.includes("k")) {
+    targetNote = "k";
+  }
+
+  if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+  applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, targetNote, true);
+}
+
+window.addEventListener("keyup", e => {
+  activeEditorKeys.delete(e.key.toLowerCase());
+});
+
+window.addEventListener("blur", () => {
+  activeEditorKeys.clear();
+  pendingChordKeys.clear();
+  if (chordTimer) {
+    clearTimeout(chordTimer);
+    chordTimer = null;
+  }
+});
+
 window.addEventListener("keydown", e => {
   const editorModal = $("modal-editor");
   if (!editorModal || !editorModal.classList.contains("active")) return;
 
   // 若使用者正在輸入曲名或 BPM 數值 input，不攔截打字
-  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
     return;
   }
 
-  const k = e.key;
+  const k = e.key.toLowerCase();
+  activeEditorKeys.add(k);
+
+  // 雙手咚 (F+J) 即時判定
+  if ((k === "f" && activeEditorKeys.has("j")) || (k === "j" && activeEditorKeys.has("f"))) {
+    e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; }
+    pendingChordKeys.clear();
+    if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "fj", true);
+    return;
+  }
+
+  // 雙手咔 (D+K) 即時判定
+  if ((k === "d" && activeEditorKeys.has("k")) || (k === "k" && activeEditorKeys.has("d"))) {
+    e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; }
+    pendingChordKeys.clear();
+    if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "dk", true);
+    return;
+  }
+
+  // 單音符微緩衝 (35ms)，以捕捉雙手極短時差的同時敲擊 (F+J 或 D+K)
+  if (k === "f" || k === "j" || k === "d" || k === "k") {
+    e.preventDefault();
+    pendingChordKeys.add(k);
+    if (!chordTimer) {
+      chordTimer = setTimeout(() => {
+        chordTimer = null;
+        flushChord();
+      }, 35);
+    }
+    return;
+  }
+
+  // 快捷鍵 1 (咚) / 2 (咔) 作為方便替代鍵
   if (k === "1") {
     e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; flushChord(); }
     if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
-    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "D", true);
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "j", true);
   } else if (k === "2") {
     e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; flushChord(); }
     if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
-    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "K", true);
-  } else if (k === " " || k === "Spacebar") {
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "k", true);
+  } else if (k === " " || k === "spacebar") {
     e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; flushChord(); }
     if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
     applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, ".", true);
-  } else if (k === "n" || k === "N") {
+  } else if (k === "n") {
     e.preventDefault();
+    if (chordTimer) { clearTimeout(chordTimer); chordTimer = null; flushChord(); }
     addNewMeasure();
   }
 });
@@ -3400,21 +3768,26 @@ window.addEventListener("keydown", e => {
 // 完整試聽
 $("btn-ed-preview").onclick = () => {
   const bpm = parseInt($("ed-bpm").value) || 100;
+  const beats = parseInt($("ed-beats").value) || 4;
   const ctx = ensureAudioContext();
   const secPerBeat = 60 / bpm;
+  const grid = parseInt($("ed-grid").value) || 16;
+  const secPerGrid = (secPerBeat * beats) / grid;
   const now = ctx.currentTime + 0.2;
   let t = now;
   $("ed-status-msg").textContent = "正在播放鼓譜試聽...";
 
   editingSong.pattern.forEach((barStr) => {
-    const grid = barStr.length;
-    const secPerGrid = (secPerBeat * 4) / grid;
+    const tokens = parseBarStringToTokens(barStr, grid);
     for (let i = 0; i < grid; i++) {
-      const ch = barStr[i];
-      if (ch === "D") playSfx("don", t + i * secPerGrid);
-      else if (ch === "K") playSfx("ka", t + i * secPerGrid);
+      const ch = tokens[i];
+      if (isDonType(ch)) {
+        playSfx(ch === "fj" ? "donStrong" : "don", t + i * secPerGrid);
+      } else if (isKaType(ch)) {
+        playSfx(ch === "dk" ? "kaStrong" : "ka", t + i * secPerGrid);
+      }
     }
-    t += secPerBeat * 4;
+    t += secPerBeat * beats;
   });
 
   setTimeout(() => {
@@ -3571,10 +3944,11 @@ function openSectionPracticeModal(song) {
     card.className = "section-bar-card" + (bIdx === selectedSectionBar ? " selected" : "");
     card.dataset.bar = bIdx;
 
+    const barTokens = parseBarStringToTokens(barStr, song.grid || 16);
     let dotsHtml = "";
-    for (let i = 0; i < barStr.length; i++) {
-      const ch = barStr[i];
-      const cls = ch === "D" ? "mini-dot d" : ch === "K" ? "mini-dot k" : "mini-dot empty";
+    for (let i = 0; i < barTokens.length; i++) {
+      const tok = barTokens[i];
+      const cls = isDonType(tok) ? "mini-dot d" : isKaType(tok) ? "mini-dot k" : "mini-dot empty";
       dotsHtml += `<div class="${cls}"></div>`;
     }
 
