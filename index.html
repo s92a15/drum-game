@@ -324,6 +324,8 @@
   .drum-station-left {
     width: 190px;
     height: 100%;
+    padding: 8px;
+    box-sizing: border-box;
     background: #121626;
     box-shadow: inset -2px 0 0 var(--highway-border);
     position: relative;
@@ -335,11 +337,21 @@
   }
   .taiko-visualizer {
     position: relative;
-    width: 124px;
-    height: 124px;
+    width: 126px;
+    height: 126px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.1s ease-out;
+  }
+  .taiko-visualizer.combo-fever-ring {
+    outline: 4px solid rgba(255, 211, 42, 0.75);
+    outline-offset: 3px;
+  }
+  .taiko-visualizer.combo-rainbow-ring {
+    outline: 5px solid rgba(255, 107, 129, 0.85);
+    outline-offset: 4px;
   }
   .taiko-visualizer img {
     position: absolute;
@@ -365,6 +377,72 @@
     display: block;
     filter: hue-rotate(175deg) saturate(2.2) brightness(1.15);
   }
+
+  /* 太鼓鼓面中央連擊數 (Combo Overlay) */
+  .drum-combo-overlay {
+    position: relative;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    text-align: center;
+    transform: translateY(-2px);
+  }
+  .combo-num {
+    font-family: var(--font-num);
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 0.95;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.85), 0 1px 2px rgba(0, 0, 0, 0.95);
+    transition: transform 0.1s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s ease;
+  }
+  .combo-num.combo-tier-0 {
+    font-size: 30px;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .combo-num.combo-tier-1 {
+    font-size: 38px;
+    color: #ffffff;
+  }
+  .combo-num.combo-tier-2 {
+    font-size: 44px;
+    color: var(--gold);
+  }
+  .combo-num.combo-tier-3 {
+    font-size: 46px;
+    color: #ff7f50;
+  }
+  .combo-num.combo-tier-4 {
+    font-size: 48px;
+    color: #fff200;
+  }
+  .combo-num.combo-pop {
+    transform: scale(1.26);
+  }
+  .drum-combo-overlay.combo-shatter {
+    animation: comboShatterShake 0.36s ease-out;
+  }
+  @keyframes comboShatterShake {
+    0% { transform: translateY(-2px) translateX(0) rotate(0deg); }
+    20% { transform: translateY(2px) translateX(-8px) rotate(-10deg); }
+    45% { transform: translateY(4px) translateX(8px) rotate(10deg); }
+    70% { transform: translateY(2px) translateX(-5px) rotate(-6deg); }
+    100% { transform: translateY(-2px) translateX(0) rotate(0deg); }
+  }
+  .combo-label {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 900;
+    color: #fff3b0;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  }
+
   .drum-key-hints {
     position: absolute;
     bottom: 4px;
@@ -465,61 +543,101 @@
     border: 3px solid #94a3b8;
   }
 
-  /* 下方角色與儀表舞台 */
-  .stage-lower-deck {
+  /* ==================== 中央動態角色大舞台 (Central Interactive Stage) ==================== */
+  .central-stage-show {
     flex: 1;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 0 32px 20px;
     position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 40px 6px;
+    z-index: 5;
+    pointer-events: none;
   }
 
-  /* 左下角：Kenney 開源角色啦啦隊與連擊數 */
-  .cheer-squad {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    background: rgba(18, 22, 38, 0.82);
-    border: 3px solid var(--highway-border);
-    border-radius: 20px;
-    padding: 12px 22px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
-  }
-  .char-stage {
-    display: flex;
-    align-items: flex-end;
+  .stage-mode-pill {
+    position: absolute;
+    top: 12px;
+    left: 28px;
+    pointer-events: auto;
+    background: rgba(18, 22, 38, 0.86);
+    border: 2px solid var(--gold);
+    border-radius: 22px;
+    padding: 8px 16px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--gold);
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    transition: transform 0.14s ease;
   }
+  .stage-mode-pill:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  .stage-actors-lane {
+    position: relative;
+    width: 100%;
+    max-width: 1060px;
+    height: 185px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  /* 主角與夥伴群組 */
+  .char-stage {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .central-stage-show[data-stage-mode="runner"] .char-stage,
+  .central-stage-show[data-stage-mode="battle"] .char-stage {
+    transform: translateX(-160px);
+  }
+
   .hero-char-img {
-    width: 108px;
-    height: 136px;
+    width: 118px;
+    height: 148px;
     object-fit: contain;
-    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
-    transition: transform 0.1s ease-out;
+    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+    transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
     transform-origin: center bottom;
   }
   .hero-char-img.bounce {
-    transform: translateY(-12px) scale(1.06);
+    transform: translateY(-18px) scale(1.08);
   }
+  .hero-char-img.runner-leap {
+    transform: translateY(-42px) rotate(-8deg) scale(1.08);
+  }
+
   .pet-companion {
-    width: 68px;
-    height: 68px;
+    width: 76px;
+    height: 76px;
     object-fit: contain;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
-    animation: petBob 0.62s ease-in-out infinite alternate;
-  }
-  @keyframes petBob {
-    from { transform: translateY(0) rotate(-4deg); }
-    to { transform: translateY(-8px) rotate(4deg); }
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+    transform-origin: center bottom;
+    transition: transform 0.12s ease-out;
   }
 
   /* Kenney 咚咔圓形角色 (Shape Characters CC0) */
   .don-ka-mascot {
     position: relative;
-    width: 72px;
-    height: 72px;
-    animation: petBob 0.5s ease-in-out infinite alternate-reverse;
+    width: 80px;
+    height: 80px;
+    transform-origin: center bottom;
+    transition: transform 0.12s ease-out;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
   }
   .don-ka-mascot img.body {
     width: 100%;
@@ -535,29 +653,182 @@
     object-fit: contain;
   }
 
-  .combo-panel {
+  /* 祭典模式額外應援動物夥伴 (10 / 25 / 50 Combo 解鎖登場) */
+  .fest-ally {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+    transform-origin: center bottom;
+    display: none;
+    transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .central-stage-show[data-stage-mode="festival"] .fest-ally.unlocked {
+    display: block;
+  }
+
+  /* 跌倒動畫 (Miss 不可時觸發) */
+  .char-stage.stumble-fall .hero-char-img,
+  .char-stage.stumble-fall .pet-companion,
+  .char-stage.stumble-fall .don-ka-mascot,
+  .char-stage.stumble-fall .fest-ally {
+    transform: translateY(16px) rotate(-78deg) scale(0.94) !important;
+  }
+
+  /* 跌倒暈眩提示標籤 */
+  .stumble-dizzy-badge {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: rgba(255, 71, 87, 0.92);
+    border: 2px solid #ffffff;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+  }
+  .char-stage.stumble-fall .stumble-dizzy-badge {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px) scale(1);
+  }
+
+  /* 模式 B：綠野奔馳吃金幣物件層 */
+  .runner-items-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: none;
+    z-index: 3;
+  }
+  .central-stage-show[data-stage-mode="runner"] .runner-items-layer {
+    display: block;
+  }
+  .runner-prop-item {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.45));
+    will-change: transform;
+  }
+
+  /* 模式 C：太鼓音波退怪獸層 */
+  .battle-stage-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: none;
+    z-index: 4;
+  }
+  .central-stage-show[data-stage-mode="battle"] .battle-stage-layer {
+    display: block;
+  }
+  .battle-enemy-box {
+    position: absolute;
+    right: 120px;
+    bottom: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-left: 10px;
-    border-left: 2px solid #39446e;
+    gap: 8px;
+    transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .combo-num {
-    font-family: var(--font-num);
-    font-size: 64px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+  .battle-enemy-box.enemy-hit-knock {
+    transform: translateX(26px) scale(0.92);
   }
-  .combo-label {
+  .battle-enemy-box.enemy-lunge {
+    transform: translateX(-48px) scale(1.14);
+  }
+  .battle-enemy-badge {
+    background: rgba(18, 22, 38, 0.9);
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  }
+  .battle-enemy-name {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
-    color: var(--text-light);
-    letter-spacing: 0.12em;
-    margin-top: 4px;
+    color: var(--gold);
+  }
+  .battle-hp-shell {
+    width: 120px;
+    height: 10px;
+    background: #111524;
+    border-radius: 5px;
+    border: 1px solid #485482;
+  }
+  .battle-hp-fill {
+    width: 100%;
+    height: 100%;
+    background: #ff4757;
+    border-radius: 4px;
+    transform-origin: left center;
+    transform: scaleX(1);
+    transition: transform 0.12s ease-out;
+  }
+  .battle-enemy-sprite {
+    width: 112px;
+    height: 112px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+    transition: transform 0.12s ease;
+  }
+  .battle-sonic-wave {
+    position: absolute;
+    bottom: 38px;
+    left: 0;
+    width: 68px;
+    height: 68px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+    will-change: transform, opacity;
+  }
+
+  /* 舞台浮動加分與特效文字 (+100 金幣 / 擊退怪獸) */
+  .stage-float-pop {
+    position: absolute;
+    bottom: 120px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff200;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.85);
+    pointer-events: none;
+    z-index: 10;
+    animation: stageFloatUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes stageFloatUp {
+    0% { opacity: 1; transform: translate(-50%, 0) scale(0.85); }
+    100% { opacity: 0; transform: translate(-50%, -46px) scale(1.12); }
+  }
+
+  /* 下方儀表舞台 (簡潔雙區塊：中央準度儀 + 右側分數) */
+  .stage-lower-deck {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 32px 18px;
+    position: relative;
+    z-index: 6;
+  }
+  .deck-left-spacer {
+    width: 240px;
+    pointer-events: none;
   }
 
   /* 中央：節奏快慢偏差儀表 (Early / Late Meter) */
@@ -565,7 +836,7 @@
     background: rgba(18, 22, 38, 0.88);
     border: 3px solid var(--highway-border);
     border-radius: 18px;
-    padding: 14px 26px;
+    padding: 12px 26px;
     min-width: 290px;
     text-align: center;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
@@ -621,13 +892,14 @@
     background: rgba(18, 22, 38, 0.88);
     border: 3px solid var(--gold);
     border-radius: 20px;
-    padding: 14px 28px;
+    padding: 12px 28px;
+    min-width: 240px;
     text-align: right;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
   }
   .score-val {
     font-family: var(--font-num);
-    font-size: 48px;
+    font-size: 46px;
     font-weight: 700;
     color: #ffffff;
     letter-spacing: 0.04em;
@@ -1592,13 +1864,17 @@
   <!-- 核心遊玩舞台 -->
   <main class="stage-arena">
     <div class="track-highway-wrap">
-      <!-- 左側太鼓互動視覺區 (osu!resources open-source Taiko Drum) -->
+      <!-- 左側太鼓互動視覺區 (osu!resources open-source Taiko Drum + 中央連擊顯示) -->
       <div class="drum-station-left">
-        <div class="taiko-visualizer">
+        <div class="taiko-visualizer" id="taiko-visualizer-box">
           <img src="assets/taiko/taiko-drum-outer.png" alt="鼓邊">
           <img src="assets/taiko/taiko-drum-outer-hit.png" class="hit-layer" id="drum-outer-hit" alt="">
           <img src="assets/taiko/taiko-drum-inner.png" class="drum-inner" alt="鼓面">
           <img src="assets/taiko/taiko-drum-inner-hit.png" class="drum-inner hit-layer" id="drum-inner-hit" alt="">
+          <div class="drum-combo-overlay" id="drum-combo-overlay">
+            <div class="combo-num combo-tier-0" id="combo-display">0</div>
+            <div class="combo-label">連擊</div>
+          </div>
         </div>
         <div class="drum-key-hints" title="鍵盤輔助按鍵：D/K 咔、F/J 咚">
           <img src="assets/ui/key_d.png" alt="D">
@@ -1620,22 +1896,49 @@
       </div>
     </div>
 
-    <!-- 下方角色啦啦隊、節奏偏差儀、得分面板 -->
-    <div class="stage-lower-deck">
-      <div class="cheer-squad">
-        <div class="char-stage">
+    <!-- 中央大草原角色互動舞台 (支援三種隨機模式：祭典應援團 / 綠野吃金幣 / 音波退怪獸) -->
+    <div class="central-stage-show" id="central-stage-show" data-stage-mode="festival">
+      <button type="button" class="stage-mode-pill" id="stage-mode-pill" title="每次開始自動隨機抽籤，亦可點此手動切換舞台模式">
+        <span id="stage-mode-icon">🏮</span>
+        <span id="stage-mode-label">舞台模式：太鼓祭典應援團</span>
+      </button>
+
+      <div class="stage-actors-lane" id="stage-actors-lane">
+        <div class="char-stage" id="char-stage-group">
+          <div class="stumble-dizzy-badge" id="stumble-dizzy-badge">💫 哎呀跌倒了！</div>
+          <img src="assets/chars/chick.png" class="fest-ally" id="fest-ally-1" alt="應援小雞">
           <img src="assets/chars/male_idle.png" class="hero-char-img" id="hero-drummer" alt="小鼓手">
           <img src="assets/chars/panda.png" class="pet-companion" id="pet-companion" alt="吉祥物夥伴">
           <div class="don-ka-mascot" id="don-mascot">
             <img src="assets/chars/don_body.png" class="body" alt="">
             <img src="assets/chars/face_happy.png" class="face" id="don-mascot-face" alt="">
           </div>
+          <img src="assets/chars/bear.png" class="fest-ally" id="fest-ally-2" alt="應援小熊">
+          <img src="assets/chars/monkey.png" class="fest-ally" id="fest-ally-3" alt="應援小猴">
         </div>
-        <div class="combo-panel">
-          <div class="combo-num" id="combo-display">0</div>
-          <div class="combo-label">連擊 COMBO</div>
+
+        <!-- 模式 B：綠野奔馳吃金幣物件層 -->
+        <div class="runner-items-layer" id="runner-items-layer"></div>
+
+        <!-- 模式 C：太鼓音波退怪獸層 -->
+        <div class="battle-stage-layer" id="battle-stage-layer">
+          <div id="battle-waves-box"></div>
+          <div class="battle-enemy-box" id="battle-enemy-box">
+            <div class="battle-enemy-badge">
+              <span class="battle-enemy-name" id="battle-enemy-name">Lv.1 藍史萊姆</span>
+              <div class="battle-hp-shell">
+                <div class="battle-hp-fill" id="battle-hp-fill"></div>
+              </div>
+            </div>
+            <img src="assets/chars/slime_blue.png" class="battle-enemy-sprite" id="battle-enemy-sprite" alt="怪獸">
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- 下方簡潔儀表台：中央準度偏差儀 + 右下得分面板 -->
+    <div class="stage-lower-deck">
+      <div class="deck-left-spacer" aria-hidden="true"></div>
 
       <div class="timing-meter-card">
         <div class="timing-title">敲擊準度指針（搶拍 / 拖拍）</div>
@@ -2663,6 +2966,383 @@ function loadSong(song) {
   if (song.theme === "grass") backdrop.classList.add("theme-grass");
 }
 
+// ==================== 4.5 中央大草原三種隨機互動舞台系統 ====================
+const STAGE_MODES = ["festival", "runner", "battle"];
+const STAGE_MODE_META = {
+  festival: { icon: "🏮", label: "舞台模式：太鼓祭典應援團" },
+  runner:   { icon: "🏃", label: "舞台模式：綠野奔馳吃金幣" },
+  battle:   { icon: "⚔️", label: "舞台模式：太鼓音波退怪獸" }
+};
+const BATTLE_MONSTERS = [
+  {
+    name: "藍史萊姆",
+    normal: "assets/chars/slime_blue.png",
+    hit: "assets/chars/slime_blue_hit.png",
+    dead: "assets/chars/slime_blue_squashed.png",
+    maxHp: 10
+  },
+  {
+    name: "調皮幽靈",
+    normal: "assets/chars/ghost_normal.png",
+    hit: "assets/chars/ghost_hit.png",
+    dead: "assets/chars/ghost_dead.png",
+    maxHp: 14
+  }
+];
+
+let stageShow = {
+  mode: "festival",
+  stumbleUntil: 0,
+  runnerSpawnTimer: 0,
+  runnerItems: [],
+  sonicWaves: [],
+  monsterLevel: 1,
+  monsterIdx: 0,
+  monsterHp: 10,
+  monsterMaxHp: 10,
+  monsterDefeatedUntil: 0
+};
+
+function initStageShow(forcedMode = null) {
+  const chosen = forcedMode || STAGE_MODES[Math.floor(Math.random() * STAGE_MODES.length)];
+  stageShow.mode = chosen;
+  stageShow.stumbleUntil = 0;
+  stageShow.runnerSpawnTimer = 0.25;
+  stageShow.runnerItems = [];
+  stageShow.sonicWaves = [];
+  stageShow.monsterLevel = 1;
+  stageShow.monsterIdx = 0;
+  const m = BATTLE_MONSTERS[0];
+  stageShow.monsterMaxHp = m.maxHp;
+  stageShow.monsterHp = m.maxHp;
+  stageShow.monsterDefeatedUntil = 0;
+
+  const container = $("central-stage-show");
+  if (container) container.dataset.stageMode = chosen;
+
+  const meta = STAGE_MODE_META[chosen] || STAGE_MODE_META.festival;
+  if ($("stage-mode-icon")) $("stage-mode-icon").textContent = meta.icon;
+  if ($("stage-mode-label")) $("stage-mode-label").textContent = meta.label;
+
+  // 重設角色姿勢與表情
+  const charGroup = $("char-stage-group");
+  if (charGroup) charGroup.classList.remove("stumble-fall");
+  if ($("hero-drummer")) {
+    $("hero-drummer").src = charSkin.idle;
+    $("hero-drummer").classList.remove("bounce", "runner-leap");
+    $("hero-drummer").style.transform = "";
+  }
+  if ($("pet-companion")) $("pet-companion").style.transform = "";
+  if ($("don-mascot")) $("don-mascot").style.transform = "";
+  if ($("don-mascot-face")) $("don-mascot-face").src = "assets/chars/face_happy.png";
+
+  // 清空奔馳物件與音波
+  if ($("runner-items-layer")) $("runner-items-layer").innerHTML = "";
+  if ($("battle-waves-box")) $("battle-waves-box").innerHTML = "";
+
+  // 初始化怪獸面板
+  updateBattleMonsterUI();
+  updateFestivalAllies();
+}
+
+function updateBattleMonsterUI() {
+  const m = BATTLE_MONSTERS[stageShow.monsterIdx % BATTLE_MONSTERS.length];
+  if ($("battle-enemy-name")) {
+    $("battle-enemy-name").textContent = `Lv.${stageShow.monsterLevel} ${m.name}`;
+  }
+  if ($("battle-enemy-sprite")) {
+    $("battle-enemy-sprite").src = m.normal;
+  }
+  if ($("battle-hp-fill")) {
+    const ratio = Math.max(0, Math.min(1, stageShow.monsterHp / stageShow.monsterMaxHp));
+    $("battle-hp-fill").style.transform = `scaleX(${ratio})`;
+  }
+}
+
+function updateFestivalAllies() {
+  const a1 = $("fest-ally-1");
+  const a2 = $("fest-ally-2");
+  const a3 = $("fest-ally-3");
+  if (a1) a1.classList.toggle("unlocked", currentCombo >= 10);
+  if (a2) a2.classList.toggle("unlocked", currentCombo >= 25);
+  if (a3) a3.classList.toggle("unlocked", currentCombo >= 50);
+}
+
+function spawnStagePopup(text, leftPx = 420) {
+  const lane = $("stage-actors-lane");
+  if (!lane) return;
+  const pop = document.createElement("div");
+  pop.className = "stage-float-pop";
+  pop.style.left = leftPx + "px";
+  pop.textContent = text;
+  lane.appendChild(pop);
+  setTimeout(() => pop.remove(), 660);
+}
+
+function onStageHit(isPerfect) {
+  const nowPerf = performance.now();
+  const charGroup = $("char-stage-group");
+  if (charGroup && charGroup.classList.contains("stumble-fall")) {
+    charGroup.classList.remove("stumble-fall");
+    stageShow.stumbleUntil = 0;
+  }
+
+  const drummer = $("hero-drummer");
+  const face = $("don-mascot-face");
+  if (face) {
+    face.src = currentCombo >= 8 ? "assets/chars/face_excited.png" : "assets/chars/face_happy.png";
+  }
+
+  if (stageShow.mode === "festival") {
+    drummer.src = charSkin.hit;
+    drummer.classList.add("bounce");
+    setTimeout(() => {
+      drummer.classList.remove("bounce");
+      if (performance.now() >= stageShow.stumbleUntil) {
+        drummer.src = currentCombo >= 10 ? charSkin.cheer : charSkin.idle;
+      }
+    }, 140);
+    if (isPerfect && currentCombo > 0 && currentCombo % 10 === 0) {
+      spawnStagePopup(`🎉 ${currentCombo} 連擊應援！`, 520);
+    }
+
+  } else if (stageShow.mode === "runner") {
+    drummer.src = "assets/chars/p1_jump.png";
+    drummer.classList.add("runner-leap");
+    setTimeout(() => {
+      drummer.classList.remove("runner-leap");
+      if (performance.now() >= stageShow.stumbleUntil) {
+        drummer.src = currentCombo >= 10 ? charSkin.cheer : charSkin.idle;
+      }
+    }, 180);
+
+    // 收集最靠近主角的金幣或寶石，若場上沒有則立即在前方生成並吸收
+    let targetCoin = stageShow.runnerItems.find(it => !it.collected && it.type !== "rock" && it.x < 560);
+    if (targetCoin) {
+      targetCoin.collected = true;
+      if (targetCoin.el) targetCoin.el.remove();
+    }
+    currentScore += isPerfect ? 150 : 80;
+    spawnStagePopup(isPerfect ? "🪙 +150" : "🪙 +80", 360);
+
+  } else if (stageShow.mode === "battle") {
+    drummer.src = charSkin.hit;
+    drummer.classList.add("bounce");
+    setTimeout(() => {
+      drummer.classList.remove("bounce");
+      if (performance.now() >= stageShow.stumbleUntil) {
+        drummer.src = currentCombo >= 10 ? charSkin.cheer : charSkin.idle;
+      }
+    }, 140);
+
+    // 發射太鼓音波衝向怪獸
+    const waveBox = $("battle-waves-box");
+    if (waveBox) {
+      const waveEl = document.createElement("img");
+      waveEl.src = isPerfect ? "assets/particles/flare_01.png" : "assets/particles/circle_01.png";
+      waveEl.className = "battle-sonic-wave";
+      waveBox.appendChild(waveEl);
+      stageShow.sonicWaves.push({
+        x: 380,
+        targetX: 780,
+        el: waveEl,
+        isPerfect
+      });
+    }
+
+    // 怪獸受擊扣血與擊退反應
+    if (nowPerf >= stageShow.monsterDefeatedUntil) {
+      const m = BATTLE_MONSTERS[stageShow.monsterIdx % BATTLE_MONSTERS.length];
+      const dmg = isPerfect ? 2 : 1;
+      stageShow.monsterHp = Math.max(0, stageShow.monsterHp - dmg);
+      if ($("battle-hp-fill")) {
+        const ratio = stageShow.monsterHp / stageShow.monsterMaxHp;
+        $("battle-hp-fill").style.transform = `scaleX(${ratio})`;
+      }
+
+      const enemyBox = $("battle-enemy-box");
+      const enemySprite = $("battle-enemy-sprite");
+      if (enemyBox) {
+        enemyBox.classList.remove("enemy-hit-knock", "enemy-lunge");
+        void enemyBox.offsetWidth;
+        enemyBox.classList.add("enemy-hit-knock");
+        setTimeout(() => enemyBox.classList.remove("enemy-hit-knock"), 150);
+      }
+
+      if (stageShow.monsterHp <= 0) {
+        // 怪獸被壓扁擊退！
+        stageShow.monsterDefeatedUntil = nowPerf + 560;
+        if (enemySprite) enemySprite.src = m.dead;
+        currentScore += 500;
+        spawnStagePopup(`💥 擊退 ${m.name}！+500`, 780);
+        setTimeout(() => {
+          stageShow.monsterLevel++;
+          stageShow.monsterIdx = (stageShow.monsterIdx + 1) % BATTLE_MONSTERS.length;
+          const nextM = BATTLE_MONSTERS[stageShow.monsterIdx];
+          stageShow.monsterMaxHp = nextM.maxHp + (stageShow.monsterLevel - 1) * 2;
+          stageShow.monsterHp = stageShow.monsterMaxHp;
+          updateBattleMonsterUI();
+        }, 550);
+      } else {
+        if (enemySprite) {
+          enemySprite.src = m.hit;
+          setTimeout(() => {
+            if (performance.now() >= stageShow.monsterDefeatedUntil) {
+              enemySprite.src = m.normal;
+            }
+          }, 150);
+        }
+      }
+    }
+  }
+}
+
+function onStageMiss(reasonText = "💫 哎呀跌倒了！") {
+  const nowPerf = performance.now();
+  stageShow.stumbleUntil = nowPerf + 480;
+
+  // 左側太鼓連擊數字碎裂晃動動畫
+  const comboOverlay = $("drum-combo-overlay");
+  if (comboOverlay) {
+    comboOverlay.classList.remove("combo-shatter");
+    void comboOverlay.offsetWidth;
+    comboOverlay.classList.add("combo-shatter");
+  }
+
+  const charGroup = $("char-stage-group");
+  const badge = $("stumble-dizzy-badge");
+  if (badge) badge.textContent = reasonText;
+  if (charGroup) {
+    charGroup.classList.add("stumble-fall");
+  }
+
+  const drummer = $("hero-drummer");
+  const face = $("don-mascot-face");
+  if (drummer) {
+    drummer.src = stageShow.mode === "runner" ? "assets/chars/p1_hurt.png" : charSkin.idle;
+  }
+  if (face) {
+    face.src = stageShow.mode === "battle" ? "assets/chars/face_shock.png" : "assets/chars/face_dizzy.png";
+  }
+
+  // 模式 B：在主角腳邊出現絆腳石頭
+  if (stageShow.mode === "runner") {
+    const layer = $("runner-items-layer");
+    if (layer) {
+      const rock = document.createElement("img");
+      rock.src = "assets/ui/rock.png";
+      rock.className = "runner-prop-item";
+      rock.style.transform = "translateX(350px)";
+      layer.appendChild(rock);
+      setTimeout(() => rock.remove(), 480);
+    }
+  }
+
+  // 模式 C：怪獸向前逼近威嚇
+  if (stageShow.mode === "battle") {
+    const enemyBox = $("battle-enemy-box");
+    if (enemyBox) {
+      enemyBox.classList.remove("enemy-hit-knock", "enemy-lunge");
+      void enemyBox.offsetWidth;
+      enemyBox.classList.add("enemy-lunge");
+      setTimeout(() => enemyBox.classList.remove("enemy-lunge"), 360);
+    }
+  }
+
+  // 480ms 後角色自動爬起恢復待命
+  setTimeout(() => {
+    if (performance.now() >= stageShow.stumbleUntil - 20) {
+      if (charGroup) charGroup.classList.remove("stumble-fall");
+      if (drummer) drummer.src = charSkin.idle;
+      if (face) face.src = "assets/chars/face_happy.png";
+    }
+  }, 480);
+}
+
+function updateStageShow(elapsed, dt, secPerBeat) {
+  const nowPerf = performance.now();
+  const isStumbling = nowPerf < stageShow.stumbleUntil;
+
+  // 1. 角色隨曲目 BPM 律動彈跳 (未跌倒時)
+  if (!isStumbling && secPerBeat > 0) {
+    const beatPhase = (elapsed / secPerBeat) * Math.PI * 2;
+    const bobY = Math.abs(Math.sin(beatPhase * 0.5)) * -10;
+    const tilt = Math.sin(beatPhase * 0.5) * 4;
+
+    const pet = $("pet-companion");
+    const mascot = $("don-mascot");
+    if (pet) pet.style.transform = `translateY(${bobY.toFixed(1)}px) rotate(${tilt.toFixed(1)}deg)`;
+    if (mascot) mascot.style.transform = `translateY(${(bobY * 0.85).toFixed(1)}px) rotate(${(-tilt).toFixed(1)}deg)`;
+
+    ["fest-ally-1", "fest-ally-2", "fest-ally-3"].forEach((id, idx) => {
+      const el = $(id);
+      if (el && el.classList.contains("unlocked")) {
+        const allyBob = Math.abs(Math.sin(beatPhase * 0.5 + (idx + 1) * 0.9)) * -12;
+        el.style.transform = `translateY(${allyBob.toFixed(1)}px)`;
+      }
+    });
+  }
+
+  // 2. 模式 B (綠野奔馳吃金幣)：滾動生成金幣與寶石
+  if (stageShow.mode === "runner") {
+    stageShow.runnerSpawnTimer -= dt;
+    if (stageShow.runnerSpawnTimer <= 0) {
+      stageShow.runnerSpawnTimer = 0.55 + Math.random() * 0.35;
+      const layer = $("runner-items-layer");
+      if (layer) {
+        const roll = Math.random();
+        const itemType = roll > 0.72 ? "gem_blue" : roll > 0.45 ? "gem_green" : "coin_gold";
+        const img = document.createElement("img");
+        img.src = `assets/ui/${itemType}.png`;
+        img.className = "runner-prop-item";
+        const startX = 960;
+        img.style.transform = `translateX(${startX}px)`;
+        layer.appendChild(img);
+        stageShow.runnerItems.push({
+          x: startX,
+          type: itemType,
+          collected: false,
+          el: img
+        });
+      }
+    }
+
+    for (let i = stageShow.runnerItems.length - 1; i >= 0; i--) {
+      const it = stageShow.runnerItems[i];
+      if (it.collected) {
+        stageShow.runnerItems.splice(i, 1);
+        continue;
+      }
+      it.x -= 280 * dt;
+      if (it.x < 160) {
+        if (it.el) it.el.remove();
+        stageShow.runnerItems.splice(i, 1);
+        continue;
+      }
+      if (it.el) {
+        it.el.style.transform = `translateX(${it.x.toFixed(1)}px)`;
+      }
+    }
+  }
+
+  // 3. 模式 C (太鼓音波退怪獸)：推進音波飛行軌跡
+  if (stageShow.mode === "battle") {
+    for (let i = stageShow.sonicWaves.length - 1; i >= 0; i--) {
+      const w = stageShow.sonicWaves[i];
+      w.x += 920 * dt;
+      if (w.x >= w.targetX) {
+        if (w.el) w.el.remove();
+        stageShow.sonicWaves.splice(i, 1);
+        continue;
+      }
+      if (w.el) {
+        const scale = w.isPerfect ? 1.25 : 0.95;
+        w.el.style.transform = `translateX(${w.x.toFixed(1)}px) scale(${scale})`;
+      }
+    }
+  }
+}
+
 function startGame() {
   const aCtx = ensureAudioContext();
   loadSong(SONGS[currentSongIndex]);
@@ -2674,6 +3354,7 @@ function startGame() {
   goodHits = 0;
   missHits = 0;
   timingDiffs = [];
+  initStageShow();
   updateScoreUI();
 
   $("view-song-select").classList.add("hidden");
@@ -2757,6 +3438,7 @@ function gameLoop(nowPerf) {
   }
 
   renderHighway(elapsed, dt);
+  updateStageShow(elapsed, dt, secPerBeat);
   checkMissNotes(elapsed);
 
   const lastNote = activeNotes[activeNotes.length - 1];
@@ -2963,8 +3645,7 @@ function checkMissNotes(elapsed) {
       currentCombo = 0;
       missHits++;
       totalHits++;
-      $("hero-drummer").src = charSkin.idle;
-      $("don-mascot-face").src = "assets/chars/face_happy.png";
+      onStageMiss("💫 漏拍跌倒了！");
       updateScoreUI();
     }
   }
@@ -3011,14 +3692,6 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
   void target.offsetWidth;
   target.classList.add(isHitDon ? "pulse-don" : "pulse-ka");
 
-  const drummer = $("hero-drummer");
-  drummer.src = charSkin.hit;
-  drummer.classList.add("bounce");
-  setTimeout(() => {
-    drummer.classList.remove("bounce");
-    drummer.src = currentCombo >= 10 ? charSkin.cheer : charSkin.idle;
-  }, 140);
-
   if (closest && minDiff <= judgeWindow.good) {
     const rawDiffMs = (elapsed - closest.t) * 1000;
     timingDiffs.push(rawDiffMs);
@@ -3027,7 +3700,8 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
     // 演奏模式下判定咚/咔吻合即可，學生無需區分左右手
     const matchType = (inputMode === "team") || (isDonType(closest.type) === isHitDon);
     if (matchType) {
-      if (minDiff <= judgeWindow.perfect) {
+      const isPerfect = minDiff <= judgeWindow.perfect;
+      if (isPerfect) {
         closest.state = "perfect";
         perfectHits++;
         currentScore += 1000 + currentCombo * 25;
@@ -3042,17 +3716,38 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
       }
       currentCombo++;
       if (currentCombo > maxCombo) maxCombo = currentCombo;
-      if (currentCombo >= 8) {
-        $("don-mascot-face").src = "assets/chars/face_excited.png";
+      onStageHit(isPerfect);
+
+      // 鼓面連擊數字彈跳回饋
+      const comboEl = $("combo-display");
+      if (comboEl) {
+        comboEl.classList.remove("combo-pop");
+        void comboEl.offsetWidth;
+        comboEl.classList.add("combo-pop");
+        setTimeout(() => comboEl.classList.remove("combo-pop"), 110);
       }
     } else {
       closest.state = "miss";
       missHits++;
       currentCombo = 0;
       showHitJudge("打錯邊！", "judge-miss");
+      onStageMiss("💫 打錯邊跌倒了！");
     }
     totalHits++;
     updateScoreUI();
+  } else {
+    // 空敲時的輕微揮棒動作
+    const drummer = $("hero-drummer");
+    if (drummer && performance.now() >= stageShow.stumbleUntil) {
+      drummer.src = charSkin.hit;
+      drummer.classList.add("bounce");
+      setTimeout(() => {
+        drummer.classList.remove("bounce");
+        if (performance.now() >= stageShow.stumbleUntil) {
+          drummer.src = currentCombo >= 10 ? charSkin.cheer : charSkin.idle;
+        }
+      }, 120);
+    }
   }
 }
 
@@ -3072,9 +3767,37 @@ function updateTimingNeedle(diffMs) {
 
 function updateScoreUI() {
   $("score-display").textContent = String(currentScore).padStart(6, "0");
-  $("combo-display").textContent = currentCombo;
+  const comboEl = $("combo-display");
+  if (comboEl) {
+    comboEl.textContent = currentCombo;
+    comboEl.classList.remove("combo-tier-0", "combo-tier-1", "combo-tier-2", "combo-tier-3", "combo-tier-4");
+    const tier = currentCombo === 0 ? "combo-tier-0"
+      : currentCombo < 10 ? "combo-tier-1"
+      : currentCombo < 50 ? "combo-tier-2"
+      : currentCombo < 100 ? "combo-tier-3"
+      : "combo-tier-4";
+    comboEl.classList.add(tier);
+  }
+
+  const drumVis = $("taiko-visualizer-box");
+  if (drumVis) {
+    drumVis.classList.toggle("combo-fever-ring", currentCombo >= 10 && currentCombo < 50);
+    drumVis.classList.toggle("combo-rainbow-ring", currentCombo >= 50);
+  }
+
+  updateFestivalAllies();
+
   const acc = totalHits > 0 ? Math.round(((perfectHits + goodHits * 0.5) / totalHits) * 100) : 100;
   $("acc-display").textContent = acc + "%";
+}
+
+if ($("stage-mode-pill")) {
+  $("stage-mode-pill").onclick = () => {
+    playSfx("click");
+    const idx = STAGE_MODES.indexOf(stageShow.mode);
+    const nextMode = STAGE_MODES[(idx + 1) % STAGE_MODES.length];
+    initStageShow(nextMode);
+  };
 }
 
 function endGame() {
