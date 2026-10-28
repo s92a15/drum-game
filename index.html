@@ -63,6 +63,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
   }
 
   /* 16:9 街機舞台視窗 */
@@ -664,10 +665,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 24px 36px 16px;
-    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    transition: opacity 0.22s ease;
   }
   .view-screen.hidden {
-    transform: translateY(105%);
+    display: none;
     opacity: 0;
     pointer-events: none;
   }
@@ -851,7 +852,7 @@
     background: rgba(10, 13, 24, 0.86);
     backdrop-filter: blur(8px);
     z-index: 100;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     opacity: 0;
@@ -859,6 +860,7 @@
     transition: opacity 0.2s ease;
   }
   .modal-overlay.active {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
   }
@@ -2506,6 +2508,7 @@ const ctx = canvas.getContext("2d");
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
   canvas.height = canvas.parentElement.clientHeight;
+  window.scrollTo(0, 0);
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
