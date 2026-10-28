@@ -1358,6 +1358,11 @@
     border-color: var(--gold);
     color: var(--gold);
   }
+  .btn-row-action.section {
+    background: #1b3d36;
+    border-color: var(--jade-ok);
+    color: #a8ffdb;
+  }
   .btn-row-action.del {
     background: #471b26;
     border-color: #ff4757;
@@ -1381,6 +1386,93 @@
     font-weight: 700;
     color: var(--gold);
   }
+
+  /* 軌道橫幅：系統示範聽音 vs 學生跟打 */
+  .track-phase-banner {
+    position: absolute;
+    left: 210px;
+    top: 10px;
+    z-index: 8;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 900;
+    padding: 6px 18px;
+    border-radius: 24px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    animation: pulseBanner 0.8s ease-in-out infinite alternate;
+  }
+  .track-phase-banner.demo {
+    display: flex;
+    background: #232d4b;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+  }
+  .track-phase-banner.student {
+    display: flex;
+    background: #173827;
+    border: 2px solid var(--jade-ok);
+    color: #b8ffd8;
+  }
+  @keyframes pulseBanner {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+  }
+
+  /* 段落小節卡片選擇器 */
+  .section-bar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .section-bar-card {
+    background: #151a2e;
+    border: 2px solid #36446b;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  .section-bar-card:hover {
+    border-color: #6478b0;
+    transform: translateY(-2px);
+  }
+  .section-bar-card.selected {
+    background: #232c4d;
+    border-color: var(--gold);
+    outline: 2px solid var(--gold);
+  }
+  .section-bar-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--gold);
+    display: flex;
+    justify-content: space-between;
+  }
+  .section-preview-dots {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    height: 16px;
+    overflow: hidden;
+  }
+  .mini-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .mini-dot.d { background: #ff4757; }
+  .mini-dot.k { background: #2e86de; }
+  .mini-dot.empty { background: #2c385c; }
 </style>
 </head>
 <body>
@@ -1454,6 +1546,10 @@
 
       <!-- 橫向音符捲動軌道 -->
       <div class="track-lane">
+        <div class="track-phase-banner" id="track-phase-banner">
+          <span id="phase-banner-icon">👂</span>
+          <span id="phase-banner-text">系統示範中...</span>
+        </div>
         <div class="target-ring" id="target-station"></div>
         <div class="hit-judgement-banner" id="hit-judge-text">良！</div>
         <canvas id="note-canvas-layer"></canvas>
@@ -1528,6 +1624,10 @@
       <button class="kenney-cta-btn blue" id="btn-home-manage-songs">
         <img src="assets/icons/musical-score.svg" alt="" style="filter:invert(1);">
         <span>管理與編輯曲庫</span>
+      </button>
+      <button class="kenney-cta-btn green" id="btn-home-section-practice">
+        <img src="assets/icons/drum-kit.svg" alt="" style="filter:invert(1);">
+        <span>段落特訓模式</span>
       </button>
       <button class="kenney-cta-btn" id="btn-start-game">
         <img src="assets/icons/drum.svg" alt="">
@@ -1760,6 +1860,52 @@
       <div style="display:flex; justify-content:center; gap:18px; margin-top:8px;">
         <button class="kenney-cta-btn blue" id="btn-res-back">返回選曲</button>
         <button class="kenney-cta-btn" id="btn-res-retry">再練一次！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 段落特訓設定 Modal (Section Practice Selector) -->
+  <div class="modal-overlay" id="modal-section-practice">
+    <div class="modal-card" style="width: 760px;">
+      <div class="modal-header">
+        <h2>
+          <img src="assets/icons/drum-kit.svg" alt="" style="filter:invert(1);">
+          <span>段落特訓模式（系統先示範，學生接續打）</span>
+        </h2>
+        <button class="kenney-icon-btn red" id="btn-close-section-modal" title="關閉">
+          <span style="font-weight:900; font-size:18px; color:#fff;">✕</span>
+        </button>
+      </div>
+
+      <div style="font-size:14px; color:var(--text-light); line-height:1.5;">
+        🎯 <b>特訓機制</b>：選擇您想重點加強的「目標小節」。系統會<b>先播放前一小節示範鼓聲與節奏</b>，接著由學生跟著打目標段落！結束後可立即一鍵重複練習，直到完全熟練。
+      </div>
+
+      <div class="row-field">
+        <div>
+          <b>練習長度設定</b>
+          <div style="font-size: 13px; color: var(--text-dim);">前置一小節由系統示範，後續為學生練習小節</div>
+        </div>
+        <select id="section-length-select" style="background:#0f1322; color:#fff; padding:6px 12px; border-radius:8px; border:2px solid #455280; font-weight:700;">
+          <option value="1" selected>練習 1 個小節 (加強單一過門/密鼓)</option>
+          <option value="2">練習 2 個小節 (雙小節段落特訓)</option>
+          <option value="4">練習 4 個小節 (完整四小節樂句)</option>
+        </select>
+      </div>
+
+      <div>
+        <div style="font-size:14px; font-weight:900; color:var(--gold); margin-bottom:8px;">
+          請點選欲特訓的「起始小節」：
+        </div>
+        <div class="section-bar-grid" id="section-bar-selector-grid"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid #323d61; padding-top:12px;">
+        <span style="font-size:13px; color:var(--text-dim);" id="section-summary-hint">已選擇：第 2 小節（系統將自第 1 小節開始示範）</span>
+        <button class="kenney-cta-btn green" id="btn-start-section-practice" style="font-size:20px; padding:10px 28px 14px;">
+          <img src="assets/icons/drum.svg" alt="">
+          <span>開始段落特訓！</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2255,6 +2401,18 @@ let goodHits = 0;
 let missHits = 0;
 let timingDiffs = [];
 
+// 段落特訓模式專用狀態
+let sectionPracticeConfig = {
+  active: false,
+  targetBar: 1, // 0-based 學生目標開始小節
+  lengthBars: 1, // 學生打幾小節
+  demoBar: 0, // 系統示範小節 (targetBar - 1)
+  hasDemo: true, // 是否有前置示範小節
+  demoStartTime: 0,
+  studentStartTime: 0,
+  endTime: 0
+};
+
 const canvas = $("note-canvas-layer");
 const ctx = canvas.getContext("2d");
 
@@ -2291,22 +2449,55 @@ function loadSong(song) {
   const secPerGrid = (secPerBeat * song.beats_per_bar) / song.grid;
   const baseOffset = (song.offset_ms || 0) / 1000;
 
-  song.pattern.forEach((barStr, barIdx) => {
-    const barTime = baseOffset + barIdx * song.beats_per_bar * secPerBeat;
-    barLines.push(barTime);
-    for (let i = 0; i < barStr.length; i++) {
-      const ch = barStr[i];
-      if (ch === "D" || ch === "K") {
-        const noteTime = barTime + i * secPerGrid;
-        activeNotes.push({
-          t: noteTime,
-          type: ch,
-          state: "active"
-        });
+  if (sectionPracticeConfig.active) {
+    // 段落特訓模式：載入 demo 小節與學生小節
+    const { targetBar, lengthBars, hasDemo, demoBar } = sectionPracticeConfig;
+    const startBarIdx = hasDemo ? demoBar : targetBar;
+    const endBarIdx = targetBar + lengthBars; // exclusive
+
+    let currTime = baseOffset;
+    for (let b = startBarIdx; b < endBarIdx; b++) {
+      if (b >= song.pattern.length) break;
+      const barStr = song.pattern[b];
+      const isDemo = hasDemo && (b === demoBar);
+
+      barLines.push(currTime);
+
+      for (let i = 0; i < barStr.length; i++) {
+        const ch = barStr[i];
+        if (ch === "D" || ch === "K") {
+          activeNotes.push({
+            t: currTime + i * secPerGrid,
+            type: ch,
+            state: "active",
+            isDemo: isDemo,
+            playedDemo: false
+          });
+        }
       }
+      currTime += song.beats_per_bar * secPerBeat;
     }
-  });
-  $("hud-song-title").textContent = song.title;
+  } else {
+    // 正常整首模式
+    song.pattern.forEach((barStr, barIdx) => {
+      const barTime = baseOffset + barIdx * song.beats_per_bar * secPerBeat;
+      barLines.push(barTime);
+      for (let i = 0; i < barStr.length; i++) {
+        const ch = barStr[i];
+        if (ch === "D" || ch === "K") {
+          const noteTime = barTime + i * secPerGrid;
+          activeNotes.push({
+            t: noteTime,
+            type: ch,
+            state: "active",
+            isDemo: false
+          });
+        }
+      }
+    });
+  }
+
+  $("hud-song-title").textContent = song.title + (sectionPracticeConfig.active ? ` (第 ${sectionPracticeConfig.targetBar + 1} 小節特訓)` : "");
 
   const backdrop = $("scenic-backdrop");
   backdrop.className = "scenic-backdrop";
@@ -2329,7 +2520,25 @@ function startGame() {
 
   $("view-song-select").classList.add("hidden");
   $("modal-results").classList.remove("active");
+  $("modal-section-practice").classList.remove("active");
+  $("view-song-manager").classList.add("hidden");
   gameState = "PLAYING";
+
+  const banner = $("track-phase-banner");
+  if (sectionPracticeConfig.active) {
+    banner.style.display = "flex";
+    if (sectionPracticeConfig.hasDemo) {
+      banner.className = "track-phase-banner demo";
+      $("phase-banner-icon").textContent = "👂";
+      $("phase-banner-text").textContent = "系統示範：請仔細聆聽...";
+    } else {
+      banner.className = "track-phase-banner student";
+      $("phase-banner-icon").textContent = "🥁";
+      $("phase-banner-text").textContent = "學生特訓：請接續打！";
+    }
+  } else {
+    banner.style.display = "none";
+  }
 
   const song = SONGS[currentSongIndex];
   const secPerBeat = 60 / song.bpm;
@@ -2351,6 +2560,35 @@ function gameLoop(nowPerf) {
 
   const now = sfxCtx ? sfxCtx.currentTime : performance.now() / 1000;
   const elapsed = now - gameStartTime;
+
+  // 段落特訓示範小節自動發聲與橫幅切換
+  if (sectionPracticeConfig.active) {
+    const song = SONGS[currentSongIndex];
+    const secPerBeat = 60 / song.bpm;
+    const demoEndTime = (song.offset_ms || 0) / 1000 + (sectionPracticeConfig.hasDemo ? song.beats_per_bar * secPerBeat : 0);
+
+    const banner = $("track-phase-banner");
+    if (sectionPracticeConfig.hasDemo && elapsed < demoEndTime) {
+      banner.className = "track-phase-banner demo";
+      $("phase-banner-icon").textContent = "👂";
+      $("phase-banner-text").textContent = "系統示範：請仔細聆聽...";
+    } else {
+      banner.className = "track-phase-banner student";
+      $("phase-banner-icon").textContent = "🥁";
+      $("phase-banner-text").textContent = "學生特訓：請接續打！";
+    }
+
+    // 檢查 demo 音符是否到達判定線並自動播放真實鼓聲
+    for (const note of activeNotes) {
+      if (note.isDemo && !note.playedDemo && elapsed >= note.t) {
+        note.playedDemo = true;
+        note.state = "demo_hit";
+        playSfx(note.type === "D" ? "don" : "ka");
+        triggerDrumVisual(note.type);
+        spawnHitParticles(90, canvas.height / 2, true);
+      }
+    }
+  }
 
   renderHighway(elapsed, dt);
   checkMissNotes(elapsed);
@@ -2390,6 +2628,12 @@ function renderHighway(elapsed, dt) {
     const r = 42;
     const sprite = note.type === "D" ? SPRITES.noteDon : SPRITES.noteKa;
     ctx.save();
+
+    // 若為示範小節的音符，給予柔和半透明與金色光環，直觀提示
+    if (note.isDemo) {
+      ctx.globalAlpha = 0.85;
+    }
+
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
       ctx.drawImage(sprite, x - r, centerY - r, r * 2, r * 2);
     } else {
@@ -2397,6 +2641,17 @@ function renderHighway(elapsed, dt) {
       ctx.arc(x, centerY, 36, 0, Math.PI * 2);
       ctx.fillStyle = note.type === "D" ? "#ff4757" : "#2e86de";
       ctx.fill();
+    }
+
+    // 示範音符外加金色虛線環標示
+    if (note.isDemo) {
+      ctx.beginPath();
+      ctx.arc(x, centerY, 46, 0, Math.PI * 2);
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = "#ffd32a";
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
     // 咔額外加上白色內環，確保形狀與咚明顯區隔
@@ -2442,6 +2697,9 @@ function renderHighway(elapsed, dt) {
 
 function checkMissNotes(elapsed) {
   for (const note of activeNotes) {
+    // 示範小節音符由系統自動演奏，不計入學生的 miss
+    if (note.isDemo) continue;
+
     if (note.state === "active" && elapsed - note.t > judgeWindow.good) {
       note.state = "miss";
       showHitJudge("不可", "judge-miss");
@@ -2478,6 +2736,9 @@ function handlePlayerHit(type, hitTime, fromMic = false) {
   let minDiff = 999;
 
   for (const note of activeNotes) {
+    // 示範小節音符由系統示範發聲，學生擊打時跳過示範音符
+    if (note.isDemo) continue;
+
     if (note.state === "active") {
       const diff = Math.abs(elapsed - note.t);
       if (diff < minDiff) {
@@ -2560,11 +2821,19 @@ function updateScoreUI() {
 function endGame() {
   gameState = "IDLE";
   playSfx("clear");
+  $("track-phase-banner").style.display = "none";
 
   const acc = totalHits > 0 ? Math.round(((perfectHits + goodHits * 0.5) / totalHits) * 100) : 0;
   const stars = acc >= 90 ? 5 : acc >= 75 ? 4 : acc >= 60 ? 3 : acc >= 40 ? 2 : 1;
 
-  $("res-song-title").textContent = SONGS[currentSongIndex].title + " — 演奏完成";
+  if (sectionPracticeConfig.active) {
+    $("res-song-title").textContent = `${SONGS[currentSongIndex].title} — 第 ${sectionPracticeConfig.targetBar + 1} 小節特訓結算`;
+    $("btn-res-retry").textContent = "🔁 再次特訓本段落！";
+  } else {
+    $("res-song-title").textContent = SONGS[currentSongIndex].title + " — 演奏完成";
+    $("btn-res-retry").textContent = "再練一次！";
+  }
+
   $("res-score").textContent = currentScore;
   $("res-combo").textContent = maxCombo;
   $("res-perfect").textContent = perfectHits;
@@ -2577,7 +2846,9 @@ function endGame() {
   $("res-timing").textContent = (avgTiming > 0 ? "偏慢 +" : avgTiming < 0 ? "偏快 " : "") + avgTiming + " ms";
 
   $("res-medal-img").src = stars >= 4 ? "assets/ui/medal_gold.png" : "assets/ui/medal_silver.png";
-  $("res-rank-title").textContent = stars === 5 ? "十鼓傳奇大師！" : stars >= 4 ? "節奏神鼓手！" : "繼續加油練習！";
+  $("res-rank-title").textContent = sectionPracticeConfig.active
+    ? (stars >= 4 ? "段落掌握神準！" : "繼續練習這個段落！")
+    : (stars === 5 ? "十鼓傳奇大師！" : stars >= 4 ? "節奏神鼓手！" : "繼續加油練習！");
 
   const starsRow = $("res-stars-row");
   starsRow.innerHTML = "";
@@ -2831,6 +3102,7 @@ function renderSongManagerTable() {
       <td><span style="font-family:var(--font-num); font-variant-numeric:tabular-nums;">${song.pattern.length}</span> 小節</td>
       <td>${starsHtml}</td>
       <td>
+        <button class="btn-row-action section" data-action="section-song" data-idx="${idx}">🎯 段落特訓</button>
         <button class="btn-row-action edit" data-action="edit-song" data-idx="${idx}">✏️ 編輯鼓譜</button>
         <button class="btn-row-action" data-action="play-song" data-idx="${idx}">▶ 試打</button>
         <button class="btn-row-action del" data-action="del-song" data-idx="${idx}">✕ 刪除</button>
@@ -2844,7 +3116,11 @@ function renderSongManagerTable() {
       const act = e.currentTarget.dataset.action;
       const idx = parseInt(e.currentTarget.dataset.idx);
       const song = SONGS[idx];
-      if (act === "edit-song") {
+      if (act === "section-song") {
+        playSfx("click");
+        currentSongIndex = idx;
+        openSectionPracticeModal(SONGS[idx]);
+      } else if (act === "edit-song") {
         playSfx("click");
         initEditorWithSong(song);
       } else if (act === "play-song") {
@@ -3268,6 +3544,100 @@ $("btn-mgmt-import-json").onclick = () => {
     reader.readAsText(file);
   };
   input.click();
+};
+$("btn-start-game").onclick = () => {
+  sectionPracticeConfig.active = false;
+  playSfx("click");
+  startGame();
+};
+
+$("btn-home-section-practice").onclick = () => {
+  playSfx("click");
+  openSectionPracticeModal(SONGS[currentSongIndex]);
+};
+
+// ==================== 8. 段落特訓模式邏輯 ====================
+let selectedSectionBar = 1; // 預設選擇第 2 小節 (0-based: 1)
+
+function openSectionPracticeModal(song) {
+  if (!song) song = SONGS[currentSongIndex];
+  const grid = $("section-bar-selector-grid");
+  grid.innerHTML = "";
+
+  selectedSectionBar = Math.min(1, song.pattern.length - 1);
+
+  song.pattern.forEach((barStr, bIdx) => {
+    const card = document.createElement("div");
+    card.className = "section-bar-card" + (bIdx === selectedSectionBar ? " selected" : "");
+    card.dataset.bar = bIdx;
+
+    let dotsHtml = "";
+    for (let i = 0; i < barStr.length; i++) {
+      const ch = barStr[i];
+      const cls = ch === "D" ? "mini-dot d" : ch === "K" ? "mini-dot k" : "mini-dot empty";
+      dotsHtml += `<div class="${cls}"></div>`;
+    }
+
+    card.innerHTML = `
+      <div class="section-bar-title">
+        <span>第 ${bIdx + 1} 小節</span>
+        <span style="font-size:12px; color:var(--text-dim);">${bIdx === 0 ? "起首" : `前置第${bIdx}節`}</span>
+      </div>
+      <div class="section-preview-dots">${dotsHtml}</div>
+    `;
+
+    card.onclick = () => {
+      playSfx("click");
+      document.querySelectorAll(".section-bar-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      selectedSectionBar = bIdx;
+      updateSectionSummaryHint();
+    };
+    grid.appendChild(card);
+  });
+
+  updateSectionSummaryHint();
+  $("modal-section-practice").classList.add("active");
+}
+
+function updateSectionSummaryHint() {
+  const len = parseInt($("section-length-select").value) || 1;
+  const startNum = selectedSectionBar + 1;
+  const endNum = Math.min(SONGS[currentSongIndex].pattern.length, startNum + len - 1);
+  const hasDemo = selectedSectionBar > 0;
+  const demoNum = selectedSectionBar; // 前一小節
+
+  if (hasDemo) {
+    $("section-summary-hint").textContent = `學生特訓：第 ${startNum} ~ ${endNum} 小節（系統先播放「第 ${demoNum} 小節」示範聽音）`;
+  } else {
+    $("section-summary-hint").textContent = `學生特訓：第 ${startNum} ~ ${endNum} 小節（此為第 1 小節無前置小節，直接由節拍器起拍）`;
+  }
+}
+
+$("section-length-select").onchange = () => {
+  updateSectionSummaryHint();
+};
+
+$("btn-close-section-modal").onclick = () => {
+  playSfx("click");
+  $("modal-section-practice").classList.remove("active");
+};
+
+$("btn-start-section-practice").onclick = () => {
+  playSfx("click");
+  const len = parseInt($("section-length-select").value) || 1;
+  const hasDemo = selectedSectionBar > 0;
+
+  sectionPracticeConfig = {
+    active: true,
+    targetBar: selectedSectionBar,
+    lengthBars: len,
+    demoBar: selectedSectionBar - 1,
+    hasDemo: hasDemo
+  };
+
+  $("modal-section-practice").classList.remove("active");
+  startGame();
 };
 </script>
 </body>
