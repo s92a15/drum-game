@@ -2185,7 +2185,11 @@
             <b>自由敲擊測試辨識</b>
             <div style="font-size: 13px; color: var(--text-dim);">目前辨識結果：<strong id="calib-live-result" style="color:var(--gold); font-size:16px;">待敲擊</strong></div>
           </div>
-          <button class="btn-action" id="btn-calib-reset">停止錄製 / 清除</button>
+          <button class="btn-action" id="btn-calib-reset">清除已儲存校準</button>
+        </div>
+
+        <div style="font-size: 13px; color: var(--gold); background: rgba(255, 211, 42, 0.1); border: 1px solid rgba(255, 211, 42, 0.35); padding: 8px 14px; border-radius: 10px; margin-top: 4px;">
+          💾 樣本自動儲存：所有咚／咔特徵樣本與靈敏度已自動保存在本機瀏覽器（LocalStorage）中，重新整理網頁無需重新敲擊校準！
         </div>
       </div>
 
@@ -2498,28 +2502,53 @@ const SFX_PATHS = {
 };
 
 const SFX_BUFFERS = {};
+const SFX_RAW_BUFFERS = {};
 let sfxCtx = null;
+let sfxDecodePromise = null;
+
+// 頁面載入時立即平行背景預載所有音訊二進位陣列，完全避免第一次點擊開打時預備拍靜音
+const sfxRawFetchPromise = Promise.all(
+  Object.entries(SFX_PATHS).map(async ([name, url]) => {
+    try {
+      const res = await fetch(url);
+      SFX_RAW_BUFFERS[name] = await res.arrayBuffer();
+    } catch (e) {
+      console.warn("SFX fetch failed:", name, e);
+    }
+  })
+);
+
+async function decodeAllSfx() {
+  await sfxRawFetchPromise;
+  if (!sfxCtx) return;
+  await Promise.all(
+    Object.entries(SFX_RAW_BUFFERS).map(async ([name, rawBuf]) => {
+      if (!SFX_BUFFERS[name] && rawBuf) {
+        try {
+          SFX_BUFFERS[name] = await sfxCtx.decodeAudioData(rawBuf.slice(0));
+        } catch (e) {
+          console.warn("SFX decode error:", name, e);
+        }
+      }
+    })
+  );
+}
 
 function ensureAudioContext() {
   if (!sfxCtx) {
     sfxCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" });
-    preloadAllSfx();
+    sfxDecodePromise = decodeAllSfx();
   }
-  if (sfxCtx.state === "suspended") sfxCtx.resume();
+  if (sfxCtx.state === "suspended") {
+    sfxCtx.resume();
+  }
   return sfxCtx;
 }
 
-async function preloadAllSfx() {
-  for (const [name, url] of Object.entries(SFX_PATHS)) {
-    try {
-      const res = await fetch(url);
-      const arr = await res.arrayBuffer();
-      SFX_BUFFERS[name] = await sfxCtx.decodeAudioData(arr);
-    } catch (e) {
-      console.warn("SFX load skipped:", name, e);
-    }
-  }
-}
+// 任意使用者第一次點擊畫面任何位置即提前解鎖 AudioContext 並解碼音效
+window.addEventListener("pointerdown", () => {
+  ensureAudioContext();
+}, { once: true });
 
 function playSfx(name, when = 0, volume = 0.85) {
   const ctx = ensureAudioContext();
@@ -2692,6 +2721,54 @@ let metroTestState = null;
 const WIN = 1024;
 const REFRACTORY = 0.085;
 
+// 本機 LocalStorage 儲存鍵值
+const CALIB_STORAGE_KEY = "shigu_drum_calibration_data";
+
+function saveCalibrationData() {
+  try {
+    const data = {
+      samples: audioSamples,
+      threshold: threshold,
+      offsetMs: latencyOffsetMs
+    };
+    localStorage.setItem(CALIB_STORAGE_KEY, JSON.stringify(data));
+  } catch (err) {
+    console.warn("儲存鼓聲校準資料失敗", err);
+  }
+}
+
+function loadCalibrationData() {
+  try {
+    const raw = localStorage.getItem(CALIB_STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.samples)) {
+        audioSamples = data.samples;
+      }
+      if (typeof data.threshold === "number" && !isNaN(data.threshold)) {
+        threshold = data.threshold;
+        if ($("slider-threshold")) $("slider-threshold").value = threshold;
+        if ($("meter-th-line")) $("meter-th-line").style.left = (threshold / 0.3) * 100 + "%";
+      }
+      if (typeof data.offsetMs === "number" && !isNaN(data.offsetMs)) {
+        latencyOffsetMs = data.offsetMs;
+        if ($("slider-offset")) $("slider-offset").value = latencyOffsetMs;
+        if ($("offset-num")) $("offset-num").textContent = latencyOffsetMs + " ms";
+      }
+      updateCalibUI();
+      const nDon = audioSamples.filter(x => x.mode === "D").length;
+      const nKa = audioSamples.filter(x => x.mode === "K").length;
+      if (nDon > 0 || nKa > 0) {
+        if ($("calib-live-result")) {
+          $("calib-live-result").textContent = `已載入本機記錄 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("讀取本機鼓聲校準記錄失敗", err);
+  }
+}
+
 async function initMicrophone() {
   try {
     const ctx = ensureAudioContext();
@@ -2803,6 +2880,7 @@ function analyzeDrumHit(c) {
 
   if (calibMode === "D" || calibMode === "K") {
     audioSamples.push(sample);
+    saveCalibrationData();
     updateCalibUI();
     playSfx(calibMode === "D" ? "don" : "ka");
   } else {
@@ -2837,6 +2915,7 @@ function updateCalibUI() {
   $("calib-n-don").textContent = audioSamples.filter(x => x.mode === "D").length;
   $("calib-n-ka").textContent = audioSamples.filter(x => x.mode === "K").length;
 }
+loadCalibrationData();
 
 // ==================== 4. 遊戲節奏引擎與 Kenney 粒子系統 ====================
 let activeNotes = [];
@@ -3410,8 +3489,11 @@ function updateStageShow(elapsed, dt, secPerBeat) {
   }
 }
 
-function startGame() {
+async function startGame() {
   const aCtx = ensureAudioContext();
+  if (sfxDecodePromise) {
+    await sfxDecodePromise;
+  }
   loadSong(SONGS[currentSongIndex]);
   currentScore = 0;
   currentCombo = 0;
@@ -4019,6 +4101,7 @@ $("btn-modal-start-mic").onclick = () => initMicrophone();
 $("slider-threshold").oninput = e => {
   threshold = +e.target.value;
   $("meter-th-line").style.left = Math.min(100, (threshold / 0.3) * 100) + "%";
+  saveCalibrationData();
 };
 $("meter-th-line").style.left = (threshold / 0.3) * 100 + "%";
 
@@ -4035,8 +4118,9 @@ $("btn-calib-ka").onclick = () => {
 $("btn-calib-reset").onclick = () => {
   calibMode = null;
   audioSamples = [];
+  saveCalibrationData();
   updateCalibUI();
-  $("calib-live-result").textContent = "已清除，可自由敲擊測試";
+  $("calib-live-result").textContent = "已清除本機校準，可重新敲擊錄製";
 };
 
 // 16 拍節拍器延遲自動測定
@@ -4076,7 +4160,8 @@ $("btn-run-latency-test").onclick = async () => {
     latencyOffsetMs = Math.max(-150, Math.min(150, avg));
     $("slider-offset").value = latencyOffsetMs;
     $("offset-num").textContent = latencyOffsetMs + " ms";
-    $("metro-auto-msg").textContent = `測試完成！平均偏差 ${avg} ms，已自動套用補償`;
+    saveCalibrationData();
+    $("metro-auto-msg").textContent = `測試完成！平均偏差 ${avg} ms，已自動保存並套用補償`;
   }, (12 * iv + 1.0) * 1000);
 };
 
@@ -4113,6 +4198,7 @@ $("select-char-skin").onchange = e => {
 $("slider-offset").oninput = e => {
   latencyOffsetMs = +e.target.value;
   $("offset-num").textContent = latencyOffsetMs + " ms";
+  saveCalibrationData();
 };
 
 // ==================== 7. 老師圖像化曲譜編輯器邏輯 ====================
