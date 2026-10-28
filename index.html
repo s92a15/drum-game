@@ -2,159 +2,870 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<title>鼓聲辨識測試 M0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>十鼓節奏大師 - 鼓藝練習遊戲</title>
 <style>
-  body { font-family: sans-serif; max-width: 760px; margin: 16px auto; padding: 0 12px; }
-  button { font-size: 16px; padding: 8px 14px; margin: 4px 4px 4px 0; cursor: pointer; }
-  button.on { background: #ffd54f; }
-  #meter { height: 24px; background: #eee; position: relative; border: 1px solid #999; }
-  #bar { height: 100%; width: 0; background: #4caf50; }
-  #thLine { position: absolute; top: 0; bottom: 0; width: 2px; background: red; }
-  #big { font-size: 64px; font-weight: bold; text-align: center; height: 90px; line-height: 90px; }
-  .don { color: #d32f2f; } .ka { color: #1976d2; }
-  table { border-collapse: collapse; font-size: 13px; width: 100%; }
-  td, th { border: 1px solid #ccc; padding: 2px 6px; text-align: right; }
-  #log { max-height: 260px; overflow-y: auto; }
-  .box { border: 1px solid #ccc; padding: 8px; margin: 8px 0; }
-  #status { color: #555; }
+  :root {
+    --bg-space: #141622;
+    --stage-bg: #1e2235;
+    --track-bg: #272c42;
+    --track-border: #3b4263;
+    --gold: #f5b027;
+    --gold-glow: rgba(245, 176, 39, 0.4);
+    --don-color: #ff4757;
+    --don-glow: rgba(255, 71, 87, 0.5);
+    --ka-color: #1e90ff;
+    --ka-glow: rgba(30, 144, 255, 0.5);
+    --text-main: #ffffff;
+    --text-muted: #9aa4bf;
+    --good-color: #2ed573;
+    --ok-color: #ffa502;
+    --bad-color: #8892b0;
+    --font-ui: "Noto Sans TC", "Microsoft JhengHei", -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--bg-space);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 16:9 街機遊戲主視窗 */
+  #game-app {
+    width: 100vw;
+    height: 56.25vw;
+    max-height: 100vh;
+    max-width: 177.78vh;
+    background: var(--stage-bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 頂部狀態列 */
+  header.hud-bar {
+    height: 60px;
+    background: rgba(20, 22, 34, 0.95);
+    border-bottom: 2px solid var(--track-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 10;
+  }
+  .hud-left, .hud-right { display: flex; align-items: center; gap: 14px; }
+  .game-logo {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .badge-mode {
+    background: #34495e;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+    color: #ecf0f1;
+    border: 1px solid #4a627a;
+  }
+  .song-title-display {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 16px;
+    border-radius: 8px;
+    border: 1px solid #3d466b;
+  }
+
+  .btn-icon {
+    background: #2b324c;
+    border: 1px solid #444e75;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { background: #3d466b; transform: scale(1.05); }
+
+  /* 麥克風狀態指示燈 */
+  .mic-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    background: rgba(0,0,0,0.4);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #333;
+  }
+  .mic-dot { width: 10px; height: 10px; border-radius: 50%; background: #e74c3c; }
+  .mic-dot.active { background: #2ed573; box-shadow: 0 0 8px #2ed573; }
+
+  /* 核心遊玩舞台 */
+  main.stage-arena {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* 節拍軌道 Note Highway */
+  .track-highway {
+    height: 140px;
+    background: var(--track-bg);
+    border-top: 3px solid var(--track-border);
+    border-bottom: 3px solid var(--track-border);
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+  }
+
+  /* 打擊判定點 (Target Ring) */
+  .target-station {
+    position: absolute;
+    left: 120px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 4px solid #00f0ff;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.2);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(0,240,255,0.15) 0%, rgba(0,0,0,0.4) 80%);
+    transition: transform 0.05s ease-out;
+  }
+  .target-station.hit-don {
+    border-color: var(--don-color);
+    box-shadow: 0 0 30px var(--don-glow);
+    transform: scale(1.15);
+  }
+  .target-station.hit-ka {
+    border-color: var(--ka-color);
+    box-shadow: 0 0 30px var(--ka-glow);
+    transform: scale(1.15);
+  }
+  .target-core-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    opacity: 0.8;
+  }
+
+  /* 音符容器 */
+  #note-canvas-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  /* 判定文字彈出效果 */
+  .hit-judgement-text {
+    position: absolute;
+    left: 120px;
+    top: 10px;
+    width: 90px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 900;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0;
+    transform: translateY(0);
+    transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .hit-judgement-text.show {
+    opacity: 1;
+    transform: translateY(-24px) scale(1.2);
+  }
+  .judge-perfect { color: var(--gold); }
+  .judge-good { color: var(--good-color); }
+  .judge-miss { color: var(--bad-color); }
+
+  /* 下方回饋與吉祥物舞台 */
+  .stage-lower-deck {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    position: relative;
+  }
+
+  /* 左下角小鼓吉祥物 */
+  .mascot-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .drum-avatar {
+    width: 110px;
+    height: 110px;
+    position: relative;
+    transition: transform 0.1s ease;
+  }
+  .drum-avatar.bounce { transform: scale(1.12) translateY(-6px); }
+
+  /* 連擊計數器 */
+  .combo-box {
+    display: flex;
+    flex-direction: column;
+  }
+  .combo-num {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 20px var(--gold-glow), 0 3px 0 #9e6c06;
+    letter-spacing: -2px;
+  }
+  .combo-label {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  /* 中間 Early / Late 節奏指針 */
+  .timing-meter {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--track-border);
+    border-radius: 12px;
+    padding: 10px 24px;
+    text-align: center;
+  }
+  .timing-bar-shell {
+    width: 200px;
+    height: 8px;
+    background: #33394f;
+    border-radius: 4px;
+    position: relative;
+    margin: 8px auto;
+  }
+  .timing-center-mark {
+    position: absolute;
+    left: 50%;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: #fff;
+  }
+  .timing-needle {
+    position: absolute;
+    top: -4px;
+    width: 8px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--gold);
+    transform: translateX(-50%);
+    left: 50%;
+    transition: left 0.1s ease-out;
+  }
+  .timing-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* 右下角分數與進度 */
+  .score-box {
+    text-align: right;
+  }
+  .score-val {
+    font-size: 42px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+  .score-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* 彈出選單 / 設定視窗 (Modal) */
+  .modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 12, 18, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-card {
+    width: 680px;
+    max-width: 92%;
+    background: #1e2235;
+    border: 2px solid #3e476b;
+    border-radius: 16px;
+    padding: 24px 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333c5e;
+    padding-bottom: 12px;
+  }
+  .modal-header h2 { font-size: 22px; color: var(--gold); }
+  .modal-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #2e3552;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: bold;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  .tab-btn.active {
+    color: #fff;
+    border-color: var(--gold);
+  }
+  .tab-content { display: none; flex-direction: column; gap: 14px; min-height: 220px; }
+  .tab-content.active { display: flex; }
+
+  /* 儀表與按鈕群組 */
+  .row-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #252b42;
+    padding: 10px 16px;
+    border-radius: 8px;
+  }
+  .btn-action {
+    background: #2f3654;
+    border: 1px solid #485482;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-action:hover { background: #3f4973; }
+  .btn-action.primary { background: #e67e22; border-color: #d35400; }
+  .btn-action.primary:hover { background: #d35400; }
+
+  .volume-meter-bar {
+    height: 16px;
+    background: #171a29;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 240px;
+    border: 1px solid #333a59;
+  }
+  .volume-meter-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2ed573, #ffa502, #ff4757);
+    transition: width 0.05s ease-out;
+  }
+  .volume-meter-th {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: #ffffff;
+    box-shadow: 0 0 4px #fff;
+  }
+
+  /* 選曲抽屜 / 開始畫面 */
+  .view-screen {
+    position: absolute;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    background: var(--stage-bg);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .view-screen.hidden {
+    transform: translateY(100%);
+    pointer-events: none;
+  }
+  .song-card-list {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 10px;
+    max-width: 90%;
+  }
+  .song-card {
+    width: 260px;
+    background: #252b42;
+    border: 2px solid #394266;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .song-card:hover, .song-card.selected {
+    border-color: var(--gold);
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+  .song-card h3 { font-size: 19px; color: #fff; }
+  .song-meta-text { font-size: 13px; color: var(--text-muted); }
+  .btn-large-play {
+    font-size: 24px;
+    font-weight: 900;
+    padding: 14px 48px;
+    background: linear-gradient(135deg, #f5b027, #e67e22);
+    border: none;
+    border-radius: 30px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
+    letter-spacing: 2px;
+    transition: transform 0.15s;
+  }
+  .btn-large-play:hover { transform: scale(1.06); }
+
+  /* 鍵盤指引氣泡 */
+  .kbd-key {
+    background: #394266;
+    border: 1px solid #58669e;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-family: monospace;
+    font-weight: bold;
+    color: #fff;
+  }
 </style>
 </head>
 <body>
-<h2>鼓聲辨識測試 M0</h2>
 
-<div class="box">
-  <button id="btnStart">1. 開啟麥克風</button>
-  <span id="status">尚未開啟</span>
-  <div id="meter"><div id="bar"></div><div id="thLine"></div></div>
-  <label>擊打門檻：<input type="range" id="th" min="0.005" max="0.5" step="0.005" value="0.05">
-    <span id="thVal">0.050</span></label>
-  （紅線＝門檻。安靜時綠條要低於紅線，敲鼓時要超過）
-  <br><label>音量偵測 <span id="clip"></span></label>
-</div>
+<div id="game-app">
+  <!-- 頂部資訊列 -->
+  <header class="hud-bar">
+    <div class="hud-left">
+      <div class="game-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="12" r="6" fill="currentColor"/>
+        </svg>
+        十鼓節奏大師
+      </div>
+      <span class="badge-mode" id="mode-badge">個人自主練習</span>
+      <div class="song-title-display" id="hud-song-title">十鼓迎賓練習曲</div>
+    </div>
+    <div class="hud-right">
+      <div class="mic-indicator">
+        <div class="mic-dot" id="mic-status-dot"></div>
+        <span id="mic-status-text">麥克風未開啟</span>
+      </div>
+      <button class="btn-icon" id="btn-open-songs" title="選擇歌曲">🎵</button>
+      <button class="btn-icon" id="btn-open-settings" title="校準與設定">⚙️</button>
+      <button class="btn-icon" id="btn-fullscreen" title="全螢幕">⛶</button>
+    </div>
+  </header>
 
-<div class="box">
-  <b>2. 收集樣本（校準）</b>：按下按鈕後敲鼓，每一下都會被標記為該類別。各敲 10 下以上。<br>
-  <button id="btnDon">標記為「咚」(鼓面)</button>
-  <button id="btnKa">標記為「咔」(鼓邊)</button>
-  <button id="btnTest">3. 測試辨識</button>
-  <button id="btnStop">暫停標記</button>
-  <div>咚樣本：<b id="nDon">0</b>　咔樣本：<b id="nKa">0</b>　
-    測試結果：<b id="acc">-</b></div>
-  <div style="font-size:13px">測試時可先按「咚」或「咔」核對鍵：
-    <label><input type="radio" name="truth" value="" checked>不核對</label>
-    <label><input type="radio" name="truth" value="D">我正在敲咚</label>
-    <label><input type="radio" name="truth" value="K">我正在敲咔</label>
+  <!-- 核心遊戲畫面 -->
+  <main class="stage-arena">
+    <div class="track-highway">
+      <!-- 判定點 -->
+      <div class="target-station" id="target-station">
+        <div class="target-core-dot"></div>
+      </div>
+      <!-- 判定提示文字 -->
+      <div class="hit-judgement-text" id="hit-judge-text">良</div>
+      <!-- 滾動音符畫布 -->
+      <canvas id="note-canvas-layer"></canvas>
+    </div>
+
+    <!-- 下方舞台與回饋 -->
+    <div class="stage-lower-deck">
+      <div class="mascot-box">
+        <!-- SVG 原創十鼓小吉祥物 -->
+        <div class="drum-avatar" id="mascot-avatar">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <!-- 鼓身本體 -->
+            <ellipse cx="50" cy="55" rx="38" ry="32" fill="#c0392b" stroke="#78281f" stroke-width="4"/>
+            <ellipse cx="50" cy="38" rx="34" ry="20" fill="#f8c291" stroke="#e58e26" stroke-width="3"/>
+            <!-- 鼓面五金與鉚釘 -->
+            <circle cx="22" cy="48" r="3" fill="#f5b027"/>
+            <circle cx="36" cy="56" r="3" fill="#f5b027"/>
+            <circle cx="50" cy="58" r="3" fill="#f5b027"/>
+            <circle cx="64" cy="56" r="3" fill="#f5b027"/>
+            <circle cx="78" cy="48" r="3" fill="#f5b027"/>
+            <!-- 可愛眼睛與笑臉 -->
+            <ellipse cx="40" cy="36" rx="4" ry="5" fill="#2d3436"/>
+            <ellipse cx="60" cy="36" rx="4" ry="5" fill="#2d3436"/>
+            <circle cx="42" cy="34" r="1.5" fill="#ffffff"/>
+            <circle cx="62" cy="34" r="1.5" fill="#ffffff"/>
+            <path d="M 44 42 Q 50 48 56 42" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="33" cy="39" rx="3.5" ry="2" fill="#ff7675" opacity="0.6"/>
+            <ellipse cx="67" cy="39" rx="3.5" ry="2" fill="#ff7675" opacity="0.6"/>
+            <!-- 鼓棒 -->
+            <line x1="12" y1="20" x2="28" y2="35" stroke="#f5cd79" stroke-width="4" stroke-linecap="round"/>
+            <line x1="88" y1="20" x2="72" y2="35" stroke="#f5cd79" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="combo-box">
+          <div class="combo-num" id="combo-display">0</div>
+          <div class="combo-label">連擊 COMBO</div>
+        </div>
+      </div>
+
+      <!-- 即時節奏偏差儀表 -->
+      <div class="timing-meter">
+        <div style="font-size: 13px; font-weight: bold; color: var(--gold);">節奏偏差指針</div>
+        <div class="timing-bar-shell">
+          <div class="timing-center-mark"></div>
+          <div class="timing-needle" id="timing-needle"></div>
+        </div>
+        <div class="timing-labels">
+          <span>偏快 EARLY</span>
+          <span id="timing-offset-text">0 ms</span>
+          <span>偏慢 LATE</span>
+        </div>
+      </div>
+
+      <!-- 分數統計 -->
+      <div class="score-box">
+        <div class="score-val" id="score-display">000000</div>
+        <div class="score-sub">準確率 ACC: <span id="acc-display">100%</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 選曲畫面 / 首頁覆蓋層 -->
+  <div class="view-screen" id="view-song-select">
+    <h2 style="font-size: 32px; color: var(--gold); letter-spacing: 2px;">選擇練習曲目</h2>
+    <p style="color: var(--text-muted); font-size: 15px;">支援麥克風即時敲擊判斷，亦可使用鍵盤備援 <span class="kbd-key">F</span> <span class="kbd-key">J</span> 咚 (鼓面) / <span class="kbd-key">D</span> <span class="kbd-key">K</span> 咔 (鼓邊)</p>
+    
+    <div class="song-card-list" id="song-card-list">
+      <!-- 曲目卡片將由 JS 自動生成 -->
+    </div>
+
+    <div style="display: flex; gap: 16px;">
+      <button class="btn-large-play" id="btn-start-game">開始演奏 🥁</button>
+    </div>
+  </div>
+
+  <!-- 設定與校準視窗 (Modal) -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>遊戲設定與校準</h2>
+        <button class="btn-icon" id="btn-close-settings">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="tab-mic">麥克風收音</button>
+        <button class="tab-btn" data-tab="tab-calib">鼓聲特徵校準</button>
+        <button class="tab-btn" data-tab="tab-latency">延遲補償</button>
+        <button class="tab-btn" data-tab="tab-system">遊戲模式</button>
+      </div>
+
+      <!-- 分頁 1：麥克風收音 -->
+      <div class="tab-content active" id="tab-mic">
+        <div class="row-field">
+          <div>
+            <b>麥克風狀態</b>
+            <div style="font-size: 12px; color: var(--text-muted);" id="modal-mic-detail">尚未啟動</div>
+          </div>
+          <button class="btn-action primary" id="btn-modal-start-mic">開啟麥克風</button>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>音量監測與擊打門檻</b>
+            <div style="font-size: 12px; color: var(--text-muted);">敲擊時綠條必須超過白色游標</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="volume-meter-bar">
+              <div class="volume-meter-fill" id="meter-fill"></div>
+              <div class="volume-meter-th" id="meter-th-line"></div>
+            </div>
+            <span id="vol-num" style="font-family: monospace; font-size: 13px;">0.05</span>
+          </div>
+        </div>
+
+        <div class="row-field">
+          <b>靈敏度門檻滑桿</b>
+          <input type="range" id="slider-threshold" min="0.005" max="0.3" step="0.005" value="0.05" style="width: 200px;">
+        </div>
+
+        <div id="clip-warning" style="color: #ff4757; font-size: 13px; font-weight: bold; display: none;">
+          ⚠️ 偵測到爆音削波！請將麥克風放遠一點或調低 Windows 輸入音量。
+        </div>
+      </div>
+
+      <!-- 分頁 2：鼓面/鼓邊校準 -->
+      <div class="tab-content" id="tab-calib">
+        <p style="font-size: 14px; color: var(--text-muted);">
+          讓電腦學習你這面鼓的音色。請分別按下按鈕後敲擊 5~10 下：
+        </p>
+        <div class="row-field">
+          <div>
+            <b>鼓面 (咚 Don) 樣本</b>
+            <div style="font-size: 12px; color: var(--text-muted);">已收集：<span id="calib-n-don">0</span> 筆</div>
+          </div>
+          <button class="btn-action" id="btn-calib-don">開始錄製「咚」</button>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>鼓邊 (咔 Ka) 樣本</b>
+            <div style="font-size: 12px; color: var(--text-muted);">已收集：<span id="calib-n-ka">0</span> 筆</div>
+          </div>
+          <button class="btn-action" id="btn-calib-ka">開始錄製「咔」</button>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>測試敲擊判定</b>
+            <div style="font-size: 12px; color: var(--text-muted);">即時辨識結果：<b id="calib-live-result" style="color:var(--gold); font-size:16px;">-</b></div>
+          </div>
+          <button class="btn-action" id="btn-calib-reset">清除樣本</button>
+        </div>
+      </div>
+
+      <!-- 分頁 3：延遲補償 -->
+      <div class="tab-content" id="tab-latency">
+        <p style="font-size: 14px; color: var(--text-muted);">
+          解決麥克風收音與電腦音效的延遲時間差：
+        </p>
+        <div class="row-field">
+          <div>
+            <b>16 拍節拍器自動測試</b>
+            <div style="font-size: 12px; color: var(--text-muted);" id="metro-auto-msg">請戴上耳機跟著拍子敲擊</div>
+          </div>
+          <button class="btn-action primary" id="btn-run-latency-test">開始節拍測試</button>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>手動延遲微調 (Offset)</b>
+            <div style="font-size: 12px; color: var(--text-muted);">正值＝判定往後延（敲擊偏慢時加補償）</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="slider-offset" min="-150" max="150" step="5" value="0" style="width: 140px;">
+            <span id="offset-num" style="font-family: monospace; font-size: 14px; width: 60px;">0 ms</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分頁 4：遊戲模式 -->
+      <div class="tab-content" id="tab-system">
+        <div class="row-field">
+          <div>
+            <b>練習模式切換</b>
+            <div style="font-size: 12px; color: var(--text-muted);">團練模式只判節奏整齊度；個人模式判咚咔</div>
+          </div>
+          <select id="select-game-mode" style="background:#171a29; color:#fff; padding:6px 10px; border-radius:6px; border:1px solid #444;">
+            <option value="solo">個人自主練習（全判咚咔）</option>
+            <option value="team">全隊齊奏模式（只判節拍整齊度）</option>
+          </select>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>判定窗寬度 (判定難易度)</b>
+            <div style="font-size: 12px; color: var(--text-muted);">國小初學建議寬鬆，有助建立信心</div>
+          </div>
+          <select id="select-window-mode" style="background:#171a29; color:#fff; padding:6px 10px; border-radius:6px; border:1px solid #444;">
+            <option value="easy">寬鬆 (良 ±80ms, 可 ±150ms)</option>
+            <option value="normal" selected>一般 (良 ±60ms, 可 ±120ms)</option>
+            <option value="arcade">街機嚴格 (良 ±35ms, 可 ±80ms)</option>
+          </select>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div id="big"></div>
-
-<div class="box">
-  <b>4. 延遲／節拍測試</b>：播放節拍器，跟著拍子敲，顯示平均偏差（正值＝偏晚）。<br>
-  BPM <input type="number" id="bpm" value="80" style="width:60px">
-  <button id="btnMetro">開始 16 拍</button>
-  <span id="metroRes"></span>
-</div>
-
-<div class="box">
-  <button id="btnCsv">匯出 CSV</button>
-  <button id="btnClear">清除全部</button>
-  <div id="log"><table><thead><tr>
-    <th>#</th><th>模式</th><th>標記</th><th>判定</th><th>峰值</th>
-    <th>低頻</th><th>高頻</th><th>高/低(dB)</th><th>重心Hz</th><th>衰減</th>
-  </tr></thead><tbody id="tbody"></tbody></table></div>
-</div>
-
 <script>
-// ---------- 參數 ----------
-const BLOCK = 256;          // 偵測區塊
-const WIN = 1024;           // 分析長度（約 21~23 ms）
-const REFRACTORY = 0.09;    // 擊打後 90 ms 不重複觸發
+// ==================== 曲目資料庫 (可隨時擴充與連接 Google 試算表) ====================
+const SONGS = [
+  {
+    id: "s01",
+    title: "十鼓迎賓練習曲",
+    bpm: 96,
+    offset_ms: 200,
+    beats_per_bar: 4,
+    grid: 16,
+    difficulty: "初級 ★★☆",
+    desc: "十鼓隊基礎四二拍咚咔交錯練習",
+    pattern: [
+      "D...D...K...K...",
+      "D...D...K...K...",
+      "D.D.D.D.K.K.K...",
+      "D.D.K.K.D.K.D...",
+      "DDDD....KKKK....",
+      "D.K.D.K.D.K.D.K.",
+      "D...D.D.K...K.K.",
+      "D.D.K.K.D...D..."
+    ]
+  },
+  {
+    id: "s02",
+    title: "小蜜蜂十鼓快打",
+    bpm: 112,
+    offset_ms: 150,
+    beats_per_bar: 4,
+    grid: 16,
+    difficulty: "中級 ★★★",
+    desc: "快速十六分音符連擊練習",
+    pattern: [
+      "D.D.D...K.K.K...",
+      "D.K.D.K.D.D.D...",
+      "K.K.K...D.D.D...",
+      "K.D.K.D.K.K.K...",
+      "DD..DD..KK..KK..",
+      "D.D.K.K.D.D.K.K.",
+      "DDDDDDDD........",
+      "KKKKKKKKD...D..."
+    ]
+  }
+];
 
-let ctx, src, proc, sr;
+let currentSongIndex = 0;
+let gameState = "IDLE"; // IDLE, PLAYING, PAUSED
+let inputMode = "solo"; // solo, team
+let judgeWindow = { perfect: 0.06, good: 0.12 };
+let latencyOffsetMs = 0;
+
+// ==================== 音訊特徵分析與麥克風演算法 ====================
+let audioCtx = null, mediaStream = null, audioProc = null, sampleRate = 44100;
 let threshold = 0.05;
-let mode = null;            // 'D' | 'K' | 'TEST' | null
-let samples = [];           // 全部紀錄
-let lastHit = -1;
+let audioSamples = []; // {mode, low, high, ratio, centroid, decay}
+let calibMode = null; // 'D', 'K', null
+let lastHitTime = -1;
 let prevRms = 0;
-let collecting = null;      // {buf, pos, t, peak}
-let preBuf = new Float32Array(BLOCK);
-let metro = null;           // {beats:[], hits:[]}
+let collectingObj = null;
+const WIN = 1024;
+const REFRACTORY = 0.08; // 80ms 內不重複觸發
 
 const $ = id => document.getElementById(id);
 
-// ---------- 開啟麥克風 ----------
-$('btnStart').onclick = async () => {
+async function initMicrophone() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: {
-      echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-    ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
-    sr = ctx.sampleRate;
-    src = ctx.createMediaStreamSource(stream);
-    proc = ctx.createScriptProcessor(BLOCK, 1, 1);
-    proc.onaudioprocess = onAudio;
-    src.connect(proc);
-    proc.connect(ctx.destination); // 部分瀏覽器需接上才會執行（輸出為靜音）
-    const s = stream.getAudioTracks()[0].getSettings();
-    $('status').textContent = `已開啟 ✅ 取樣率 ${sr} Hz，基本延遲 ${(ctx.baseLatency*1000||0).toFixed(1)} ms，` +
-      `回音消除=${s.echoCancellation} 降噪=${s.noiseSuppression} 自動增益=${s.autoGainControl}`;
-  } catch (e) {
-    $('status').textContent = '❌ 無法開啟麥克風：' + e.name + ' ' + e.message;
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    sampleRate = audioCtx.sampleRate;
+    const src = audioCtx.createMediaStreamSource(mediaStream);
+    audioProc = audioCtx.createScriptProcessor(256, 1, 1);
+    audioProc.onaudioprocess = processAudio;
+    src.connect(audioProc);
+    audioProc.connect(audioCtx.destination);
+
+    $('mic-status-dot').classList.add('active');
+    $('mic-status-text').textContent = '麥克風在線';
+    $('modal-mic-detail').textContent = `已啟用 (${sampleRate} Hz)`;
+    return true;
+  } catch (err) {
+    alert('無法開啟麥克風：' + err.name + ' - ' + err.message);
+    return false;
   }
-};
-
-$('th').oninput = e => { threshold = +e.target.value; $('thVal').textContent = threshold.toFixed(3); drawTh(); };
-function drawTh() { $('thLine').style.left = Math.min(100, threshold / 0.5 * 100) + '%'; }
-drawTh();
-
-function setMode(m, btn) {
-  mode = m;
-  ['btnDon','btnKa','btnTest'].forEach(id => $(id).classList.remove('on'));
-  if (btn) $(btn).classList.add('on');
 }
-$('btnDon').onclick = () => setMode('D', 'btnDon');
-$('btnKa').onclick = () => setMode('K', 'btnKa');
-$('btnTest').onclick = () => setMode('TEST', 'btnTest');
-$('btnStop').onclick = () => setMode(null);
 
-// ---------- 音訊處理 ----------
-let meterPeak = 0, clipCount = 0;
-function onAudio(e) {
+function processAudio(e) {
   const x = e.inputBuffer.getChannelData(0);
-  const tBlock = e.playbackTime !== undefined ? ctx.currentTime : ctx.currentTime;
   let sum = 0, peak = 0;
-  for (let i = 0; i < x.length; i++) { sum += x[i]*x[i]; const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  for (let i = 0; i < x.length; i++) {
+    sum += x[i] * x[i];
+    const a = Math.abs(x[i]);
+    if (a > peak) peak = a;
+  }
   const rms = Math.sqrt(sum / x.length);
-  meterPeak = Math.max(meterPeak * 0.9, rms);
-  if (peak > 0.99) clipCount++;
 
-  // 收集中：填滿分析窗
-  if (collecting) {
-    const c = collecting;
+  // 更新量表
+  $('meter-fill').style.width = Math.min(100, (rms / 0.3) * 100) + '%';
+  $('vol-num').textContent = rms.toFixed(3);
+  if (peak > 0.98) $('clip-warning').style.display = 'block';
+
+  // 擊打特徵收集中
+  if (collectingObj) {
+    const c = collectingObj;
     for (let i = 0; i < x.length && c.pos < WIN * 2; i++) {
-      c.buf[c.pos++] = x[i]; c.peak = Math.max(c.peak, Math.abs(x[i]));
+      c.buf[c.pos++] = x[i];
     }
-    if (c.pos >= WIN * 2) { analyze(c); collecting = null; }
+    if (c.pos >= WIN * 2) {
+      analyzeDrumHit(c);
+      collectingObj = null;
+    }
   } else {
-    // 偵測擊打：超過門檻且能量突然上升
-    const now = ctx.currentTime;
-    if (rms > threshold && rms > prevRms * 1.8 && now - lastHit > REFRACTORY) {
-      lastHit = now;
-      // 估算擊打起點：該區塊內第一個超過峰值一半的位置
+    const now = audioCtx.currentTime;
+    if (rms > threshold && rms > prevRms * 1.7 && (now - lastHitTime) > REFRACTORY) {
+      lastHitTime = now;
       let onsetIdx = 0;
-      for (let i = 0; i < x.length; i++) if (Math.abs(x[i]) > peak * 0.5) { onsetIdx = i; break; }
-      // 這個區塊在本次回呼時間之前約 BLOCK 個取樣
-      const tHit = now - (x.length - onsetIdx) / sr;
+      for (let i = 0; i < x.length; i++) {
+        if (Math.abs(x[i]) > peak * 0.5) { onsetIdx = i; break; }
+      }
+      const tHit = now - (x.length - onsetIdx) / sampleRate;
       const buf = new Float32Array(WIN * 2);
       let pos = 0;
       for (let i = onsetIdx; i < x.length; i++) buf[pos++] = x[i];
-      collecting = { buf, pos, t: tHit, peak };
+      collectingObj = { buf, pos, t: tHit };
     }
   }
   prevRms = rms;
 }
 
-// ---------- 特徵 ----------
 function fftMag(sig) {
   const n = sig.length, re = new Float32Array(n), im = new Float32Array(n);
   for (let i = 0; i < n; i++) re[i] = sig[i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)));
@@ -179,9 +890,9 @@ function fftMag(sig) {
   return mag;
 }
 
-function analyze(c) {
+function analyzeDrumHit(c) {
   const first = c.buf.subarray(0, WIN), second = c.buf.subarray(WIN, WIN * 2);
-  const mag = fftMag(first), hz = sr / WIN;
+  const mag = fftMag(first), hz = sampleRate / WIN;
   let low = 0, high = 0, tot = 0, wsum = 0;
   for (let i = 1; i < mag.length; i++) {
     const f = i * hz;
@@ -192,104 +903,374 @@ function analyze(c) {
   const ratio = 10 * Math.log10((high + 1e-12) / (low + 1e-12));
   const centroid = wsum / (tot + 1e-12);
   const e1 = first.reduce((s, v) => s + v * v, 0), e2 = second.reduce((s, v) => s + v * v, 0);
-  const decay = 10 * Math.log10((e2 + 1e-12) / (e1 + 1e-12)); // 越負＝衰減越快
-  const s = { n: samples.length + 1, t: c.t, mode: mode || '-', label: '', pred: '',
-    peak: c.peak, low, high, ratio, centroid, decay };
+  const decay = 10 * Math.log10((e2 + 1e-12) / (e1 + 1e-12));
 
-  if (mode === 'D' || mode === 'K') s.label = mode;
-  if (mode === 'TEST') {
-    const truth = document.querySelector('input[name=truth]:checked').value;
-    s.label = truth;
-    s.pred = classify(s);
+  const sample = { mode: calibMode, ratio, centroid, decay, t: c.t };
+
+  if (calibMode === 'D' || calibMode === 'K') {
+    audioSamples.push(sample);
+    updateCalibUI();
+  } else {
+    // 辨識擊打
+    const recognized = classifyHit(sample);
+    if (gameState === "PLAYING") {
+      handlePlayerHit(recognized, c.t - (latencyOffsetMs / 1000));
+    } else {
+      $('calib-live-result').textContent = recognized === 'D' ? '咚 (鼓面)' : '咔 (鼓邊)';
+    }
   }
-  if (metro) metro.hits.push(c.t);
-  samples.push(s);
-  postMessageToUI(s);
 }
 
-// 最近中心分類（特徵：高/低比、重心(kHz)、衰減）
-function feat(s) { return [s.ratio / 10, s.centroid / 1000, s.decay / 10]; }
-function classify(s) {
-  const D = samples.filter(x => x.mode === 'D'), K = samples.filter(x => x.mode === 'K');
-  if (D.length < 3 || K.length < 3) return '?';
-  const mean = arr => { const m = [0,0,0]; arr.forEach(x => feat(x).forEach((v,i)=>m[i]+=v/arr.length)); return m; };
+function classifyHit(s) {
+  const D = audioSamples.filter(x => x.mode === 'D');
+  const K = audioSamples.filter(x => x.mode === 'K');
+  if (D.length < 3 || K.length < 3) {
+    // 預設特徵比值
+    return s.ratio < -4 ? 'D' : 'K';
+  }
+  const feat = x => [x.ratio / 10, x.centroid / 1000, x.decay / 10];
+  const mean = arr => {
+    const m = [0,0,0];
+    arr.forEach(x => feat(x).forEach((v,i) => m[i] += v / arr.length));
+    return m;
+  };
   const mD = mean(D), mK = mean(K), f = feat(s);
   const dist = m => m.reduce((a, v, i) => a + (v - f[i]) ** 2, 0);
   return dist(mD) <= dist(mK) ? 'D' : 'K';
 }
 
-// ---------- 介面 ----------
-function postMessageToUI(s) {
-  // ScriptProcessor 回呼在主執行緒，直接更新
-  const show = s.pred || s.label;
-  const big = $('big');
-  big.textContent = show === 'D' ? '咚' : show === 'K' ? '咔' : show === '?' ? '樣本不足' : '●';
-  big.className = show === 'D' ? 'don' : show === 'K' ? 'ka' : '';
-  setTimeout(() => { if (big.textContent) big.style.opacity = 1; }, 0);
-
-  $('nDon').textContent = samples.filter(x => x.mode === 'D').length;
-  $('nKa').textContent = samples.filter(x => x.mode === 'K').length;
-  const tested = samples.filter(x => x.mode === 'TEST' && x.label && x.pred && x.pred !== '?');
-  if (tested.length) {
-    const ok = tested.filter(x => x.label === x.pred).length;
-    $('acc').textContent = `${ok}/${tested.length}（${(ok / tested.length * 100).toFixed(0)}%）`;
-  }
-  const tr = document.createElement('tr');
-  const name = v => v === 'D' ? '咚' : v === 'K' ? '咔' : v;
-  tr.innerHTML = [s.n, s.mode === 'TEST' ? '測試' : s.mode === '-' ? '-' : '校準',
-    name(s.label), name(s.pred), s.peak.toFixed(2), s.low.toExponential(1), s.high.toExponential(1),
-    s.ratio.toFixed(1), s.centroid.toFixed(0), s.decay.toFixed(1)].map(v => `<td>${v}</td>`).join('');
-  if (s.pred && s.label && s.pred !== s.label && s.pred !== '?') tr.style.background = '#ffcdd2';
-  $('tbody').prepend(tr);
+function updateCalibUI() {
+  $('calib-n-don').textContent = audioSamples.filter(x => x.mode === 'D').length;
+  $('calib-n-ka').textContent = audioSamples.filter(x => x.mode === 'K').length;
 }
 
-setInterval(() => {
-  $('bar').style.width = Math.min(100, meterPeak / 0.5 * 100) + '%';
-  $('clip').textContent = clipCount > 0 ? `⚠️ 爆音 ${clipCount} 次（請調低麥克風音量或拉遠）` : '正常';
-}, 50);
+// ==================== 遊戲節奏引擎與音符渲染 ====================
+let activeNotes = []; // {t, type, hit, state}
+let gameStartTime = 0;
+let currentScore = 0;
+let currentCombo = 0;
+let maxCombo = 0;
+let totalHits = 0;
+let perfectHits = 0;
+let goodHits = 0;
+let missHits = 0;
 
-// ---------- 節拍器延遲測試 ----------
-$('btnMetro').onclick = () => {
-  if (!ctx) { alert('請先開啟麥克風'); return; }
-  const bpm = +$('bpm').value || 80, iv = 60 / bpm, t0 = ctx.currentTime + 1;
-  const beats = [];
-  for (let i = 0; i < 16; i++) {
-    const t = t0 + i * iv; beats.push(t);
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.value = i % 4 === 0 ? 1500 : 1000;
-    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.06);
+const canvas = $('note-canvas-layer');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function loadSong(song) {
+  activeNotes = [];
+  const secPerBeat = 60 / song.bpm;
+  const secPerGrid = (secPerBeat * song.beats_per_bar) / song.grid;
+  const baseOffset = (song.offset_ms || 0) / 1000;
+
+  song.pattern.forEach((barStr, barIdx) => {
+    for (let i = 0; i < barStr.length; i++) {
+      const ch = barStr[i];
+      if (ch === 'D' || ch === 'K') {
+        const noteTime = baseOffset + (barIdx * song.beats_per_bar * secPerBeat) + (i * secPerGrid);
+        activeNotes.push({
+          t: noteTime,
+          type: ch,
+          hit: false,
+          state: 'active'
+        });
+      }
+    }
+  });
+  $('hud-song-title').textContent = song.title;
+}
+
+function startGame() {
+  if (!audioCtx) initMicrophone();
+  loadSong(SONGS[currentSongIndex]);
+  currentScore = 0;
+  currentCombo = 0;
+  totalHits = 0;
+  perfectHits = 0;
+  goodHits = 0;
+  missHits = 0;
+  updateScoreUI();
+
+  $('view-song-select').classList.add('hidden');
+  gameState = "PLAYING";
+  gameStartTime = (audioCtx ? audioCtx.currentTime : performance.now() / 1000) + 1.5; // 倒數 1.5 秒
+  requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+  if (gameState !== "PLAYING") return;
+  const now = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+  const elapsed = now - gameStartTime;
+
+  renderNotes(elapsed);
+  checkMissNotes(elapsed);
+
+  // 檢查是否結束
+  const lastNote = activeNotes[activeNotes.length - 1];
+  if (lastNote && elapsed > lastNote.t + 2) {
+    endGame();
+    return;
   }
-  metro = { beats, hits: [] };
-  $('metroRes').textContent = '請跟著拍子敲（建議戴耳機，避免節拍聲被當成擊打）…';
-  setTimeout(() => {
-    const offs = [];
-    metro.hits.forEach(h => {
-      let best = null;
-      beats.forEach(b => { if (best === null || Math.abs(h - b) < Math.abs(best)) best = h - b; });
-      if (Math.abs(best) < iv / 2) offs.push(best * 1000);
-    });
-    if (!offs.length) { $('metroRes').textContent = '沒有偵測到擊打'; metro = null; return; }
-    const avg = offs.reduce((a, b) => a + b, 0) / offs.length;
-    const sd = Math.sqrt(offs.reduce((a, b) => a + (b - avg) ** 2, 0) / offs.length);
-    $('metroRes').textContent = `擊打 ${offs.length} 次，平均偏差 ${avg.toFixed(0)} ms，抖動(標準差) ${sd.toFixed(0)} ms`;
-    metro = null;
-  }, (16 * iv + 1.5) * 1000);
+  requestAnimationFrame(gameLoop);
+}
+
+function renderNotes(elapsed) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const targetX = 120 + 45; // 判定圈圓心
+  const centerY = canvas.height / 2;
+  const pixelsPerSec = 380; // 音符移動速度
+
+  // 繪製小節格線
+  // 繪製音符
+  for (let note of activeNotes) {
+    if (note.state !== 'active') continue;
+    const timeDiff = note.t - elapsed;
+    const x = targetX + timeDiff * pixelsPerSec;
+
+    if (x > canvas.width + 50 || x < -50) continue;
+
+    ctx.save();
+    if (note.type === 'D') {
+      // 咚：實心紅圓 + 白色外框 + 黑色厚描邊
+      ctx.beginPath();
+      ctx.arc(x, centerY, 30, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff4757";
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+
+      // 文字
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 22px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("咚", x, centerY);
+    } else {
+      // 咔：藍色空心圓環
+      ctx.beginPath();
+      ctx.arc(x, centerY, 28, 0, Math.PI * 2);
+      ctx.fillStyle = "#1e2235";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#1e90ff";
+      ctx.stroke();
+
+      ctx.fillStyle = "#1e90ff";
+      ctx.font = "bold 20px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("咔", x, centerY);
+    }
+    ctx.restore();
+  }
+}
+
+function checkMissNotes(elapsed) {
+  for (let note of activeNotes) {
+    if (note.state === 'active' && elapsed - note.t > judgeWindow.good) {
+      note.state = 'miss';
+      showHitJudge('不可', 'judge-miss');
+      currentCombo = 0;
+      missHits++;
+      totalHits++;
+      updateScoreUI();
+    }
+  }
+}
+
+function handlePlayerHit(type, hitTime) {
+  const elapsed = hitTime - gameStartTime;
+  // 尋找最近的未擊中音符
+  let closest = null;
+  let minDiff = 999;
+
+  for (let note of activeNotes) {
+    if (note.state === 'active') {
+      const diff = Math.abs(elapsed - note.t);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = note;
+      }
+    }
+  }
+
+  // 觸發判定圈動畫
+  const target = $('target-station');
+  target.classList.remove('hit-don', 'hit-ka');
+  void target.offsetWidth;
+  target.classList.add(type === 'D' ? 'hit-don' : 'hit-ka');
+
+  // 吉祥物彈跳
+  $('mascot-avatar').classList.add('bounce');
+  setTimeout(() => $('mascot-avatar').classList.remove('bounce'), 100);
+
+  if (closest && minDiff <= judgeWindow.good) {
+    const rawDiffMs = (elapsed - closest.t) * 1000;
+    updateTimingNeedle(rawDiffMs);
+
+    // 團練模式不嚴格檢查咚咔音色，個人模式嚴格檢查
+    const matchType = (inputMode === 'team') || (closest.type === type);
+
+    if (matchType) {
+      if (minDiff <= judgeWindow.perfect) {
+        closest.state = 'perfect';
+        perfectHits++;
+        currentScore += 1000 + (currentCombo * 20);
+        showHitJudge('良', 'judge-perfect');
+      } else {
+        closest.state = 'good';
+        goodHits++;
+        currentScore += 500 + (currentCombo * 10);
+        showHitJudge('可', 'judge-good');
+      }
+      currentCombo++;
+      if (currentCombo > maxCombo) maxCombo = currentCombo;
+    } else {
+      // 敲錯音色
+      closest.state = 'miss';
+      missHits++;
+      currentCombo = 0;
+      showHitJudge('錯！', 'judge-miss');
+    }
+    totalHits++;
+    updateScoreUI();
+  }
+}
+
+function showHitJudge(text, cls) {
+  const el = $('hit-judge-text');
+  el.textContent = text;
+  el.className = 'hit-judgement-text show ' + cls;
+  setTimeout(() => el.classList.remove('show'), 250);
+}
+
+function updateTimingNeedle(diffMs) {
+  $('timing-offset-text').textContent = (diffMs > 0 ? '+' : '') + diffMs.toFixed(0) + ' ms';
+  // 限制指針在 -100ms ~ +100ms 範圍
+  const pct = 50 + (diffMs / 100) * 50;
+  $('timing-needle').style.left = Math.max(0, Math.min(100, pct)) + '%';
+}
+
+function updateScoreUI() {
+  $('score-display').textContent = String(currentScore).padStart(6, '0');
+  $('combo-display').textContent = currentCombo;
+  const acc = totalHits > 0 ? Math.round(((perfectHits + goodHits * 0.5) / totalHits) * 100) : 100;
+  $('acc-display').textContent = acc + '%';
+}
+
+function endGame() {
+  gameState = "IDLE";
+  alert(`演奏結束！\n得分：${currentScore}\n最大連擊：${maxCombo}\n良：${perfectHits} | 可：${goodHits} | 不可：${missHits}`);
+  $('view-song-select').classList.remove('hidden');
+}
+
+// ==================== 鍵盤輔助輸入 ====================
+window.addEventListener('keydown', e => {
+  if (gameState !== "PLAYING") return;
+  const key = e.key.toLowerCase();
+  const now = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+  if (key === 'f' || key === 'j') {
+    handlePlayerHit('D', now);
+  } else if (key === 'd' || key === 'k') {
+    handlePlayerHit('K', now);
+  }
+});
+
+// ==================== 介面互動與選單綁定 ====================
+function renderSongCards() {
+  const container = $('song-card-list');
+  container.innerHTML = '';
+  SONGS.forEach((song, idx) => {
+    const card = document.createElement('div');
+    card.className = 'song-card' + (idx === currentSongIndex ? ' selected' : '');
+    card.innerHTML = `
+      <h3>${song.title}</h3>
+      <div class="song-meta-text">節奏：BPM ${song.bpm} | ${song.beats_per_bar} 拍</div>
+      <div class="song-meta-text">難度：${song.difficulty}</div>
+      <p style="font-size:12px; color:#bdc3c7;">${song.desc}</p>
+    `;
+    card.onclick = () => {
+      document.querySelectorAll('.song-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      currentSongIndex = idx;
+    };
+    container.appendChild(card);
+  });
+}
+renderSongCards();
+
+$('btn-start-game').onclick = () => startGame();
+$('btn-open-songs').onclick = () => $('view-song-select').classList.remove('hidden');
+
+// 全螢幕切換
+$('btn-fullscreen').onclick = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
 };
 
-// ---------- 匯出 ----------
-$('btnCsv').onclick = () => {
-  const head = 'n,time,mode,label,pred,peak,low,high,ratio_db,centroid_hz,decay_db';
-  const rows = samples.map(s => [s.n, s.t.toFixed(4), s.mode, s.label, s.pred, s.peak.toFixed(4),
-    s.low, s.high, s.ratio.toFixed(2), s.centroid.toFixed(1), s.decay.toFixed(2)].join(','));
-  const blob = new Blob(['\ufeff' + [head, ...rows].join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'drum_samples.csv'; a.click();
+// Modal 開關與分頁
+$('btn-open-settings').onclick = () => $('modal-settings').classList.add('active');
+$('btn-close-settings').onclick = () => $('modal-settings').classList.remove('active');
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    $(btn.dataset.tab).classList.add('active');
+  };
+});
+
+$('btn-modal-start-mic').onclick = () => initMicrophone();
+
+$('slider-threshold').oninput = e => {
+  threshold = +e.target.value;
+  $('meter-th-line').style.left = Math.min(100, (threshold / 0.3) * 100) + '%';
 };
-$('btnClear').onclick = () => {
-  if (!confirm('確定清除所有樣本？')) return;
-  samples = []; $('tbody').innerHTML = ''; $('nDon').textContent = 0; $('nKa').textContent = 0;
-  $('acc').textContent = '-'; clipCount = 0; $('big').textContent = '';
+$('meter-th-line').style.left = (threshold / 0.3) * 100 + '%';
+
+// 校準鼓聲
+$('btn-calib-don').onclick = () => {
+  calibMode = 'D';
+  alert('請敲擊鼓面 (咚) 5~10 下，敲完後電腦會自動學習特徵。');
+};
+$('btn-calib-ka').onclick = () => {
+  calibMode = 'K';
+  alert('請敲擊鼓邊 (咔) 5~10 下，敲完後電腦會自動學習特徵。');
+};
+$('btn-calib-reset').onclick = () => {
+  audioSamples = [];
+  updateCalibUI();
+  $('calib-live-result').textContent = '-';
+};
+
+// 模式與判定窗
+$('select-game-mode').onchange = e => {
+  inputMode = e.target.value;
+  $('mode-badge').textContent = inputMode === 'team' ? '全隊齊奏模式' : '個人自主練習';
+};
+
+$('select-window-mode').onchange = e => {
+  if (e.target.value === 'easy') judgeWindow = { perfect: 0.08, good: 0.15 };
+  else if (e.target.value === 'arcade') judgeWindow = { perfect: 0.035, good: 0.08 };
+  else judgeWindow = { perfect: 0.06, good: 0.12 };
+};
+
+$('slider-offset').oninput = e => {
+  latencyOffsetMs = +e.target.value;
+  $('offset-num').textContent = latencyOffsetMs + ' ms';
 };
 </script>
 </body>
