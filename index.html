@@ -1216,6 +1216,13 @@
     background: #252e4d;
     transform: translateY(-2px);
   }
+  .grid-slot.cursor-active {
+    outline: 3px solid var(--gold);
+    outline-offset: -1px;
+    background: #2e3b5e;
+    transform: scale(1.04);
+    z-index: 2;
+  }
   .grid-slot.filled-don {
     background: #471b26;
     border-color: #ff4757;
@@ -1260,6 +1267,120 @@
     align-items: center;
     gap: 12px;
   }
+
+  /* 老師獨立曲目管理庫畫面 */
+  .manager-body {
+    flex: 1;
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .manager-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #171c2e;
+    border: 2px solid #36446b;
+    border-radius: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  }
+  .manager-table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    background: #151a2c;
+    border: 2px solid #36446b;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .song-mgmt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    text-align: left;
+  }
+  .song-mgmt-table th {
+    background: #101424;
+    color: var(--gold);
+    font-family: var(--font-display);
+    font-size: 15px;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 2px solid #2b3656;
+  }
+  .song-mgmt-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #222b45;
+    vertical-align: middle;
+  }
+  .song-mgmt-table tr:hover {
+    background: #1c233a;
+  }
+  .table-song-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 900;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .table-song-title img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+  .btn-row-action {
+    background: #252e4d;
+    border: 1px solid #485888;
+    color: #ffffff;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.1s;
+    margin-right: 6px;
+  }
+  .btn-row-action:hover {
+    background: #34416d;
+    transform: translateY(-1px);
+  }
+  .btn-row-action.edit {
+    background: #2b3658;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-row-action.del {
+    background: #471b26;
+    border-color: #ff4757;
+    color: #ff6b81;
+  }
+  .btn-row-action.del:hover {
+    background: #632030;
+  }
+
+  /* 快捷鍵說明膠囊提示 */
+  .shortcut-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #232b45;
+    border: 1px solid #455580;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: var(--font-num);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+  }
 </style>
 </head>
 <body>
@@ -1300,8 +1421,8 @@
       <button class="kenney-icon-btn yellow" id="btn-open-songs" title="選擇曲目">
         <img src="assets/ui/icon_music.png" alt="選曲">
       </button>
-      <button class="kenney-icon-btn" id="btn-open-editor-direct" title="老師製譜編輯器" style="background-image:url('assets/ui/btn_green.png');">
-        <img src="assets/icons/musical-score.svg" alt="製譜" style="filter:invert(1);">
+      <button class="kenney-icon-btn" id="btn-open-song-mgmt" title="老師曲目管理庫" style="background-image:url('assets/ui/btn_green.png');">
+        <img src="assets/icons/musical-score.svg" alt="曲目管理" style="filter:invert(1);">
       </button>
       <button class="kenney-icon-btn blue" id="btn-open-settings" title="校準與設定">
         <img src="assets/ui/icon_gear.png" alt="設定">
@@ -1404,9 +1525,9 @@
         <img src="assets/ui/icon_gear.png" alt="">
         <span>麥克風與鼓聲校準</span>
       </button>
-      <button class="kenney-cta-btn green" id="btn-home-create-song">
+      <button class="kenney-cta-btn blue" id="btn-home-manage-songs">
         <img src="assets/icons/musical-score.svg" alt="" style="filter:invert(1);">
-        <span>老師編寫新曲譜</span>
+        <span>管理與編輯曲庫</span>
       </button>
       <button class="kenney-cta-btn" id="btn-start-game">
         <img src="assets/icons/drum.svg" alt="">
@@ -1419,6 +1540,50 @@
       <a href="https://github.com/ppy/osu-resources" target="_blank" rel="noopener">osu! Argon Taiko Samples</a> ·
       <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net (CC BY 3.0)</a> ·
       <a href="https://fonts.google.com" target="_blank" rel="noopener">Google Fonts (OFL)</a>
+    </div>
+  </div>
+
+  <!-- 老師專用獨立曲目管理庫畫面 (Song Management View Screen) -->
+  <div class="view-screen hidden" id="view-song-manager">
+    <div class="kenney-banner-title">十鼓隊曲目管理庫（老師專用）</div>
+
+    <div class="manager-body">
+      <div class="manager-toolbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:15px; font-weight:700; color:var(--text-light);">目前曲庫共 <strong id="mgmt-song-count" style="color:var(--gold);">0</strong> 首歌曲</span>
+          <button class="btn-action" id="btn-mgmt-sync-sheet">🔄 與 Google 試算表同步</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="btn-action" id="btn-mgmt-export-json">匯出 JSON</button>
+          <button class="btn-action" id="btn-mgmt-import-json">匯入 JSON</button>
+          <button class="btn-action primary" id="btn-mgmt-new-song" style="background-image:url('assets/ui/btn_yellow.png'); color:#3d2506; font-size:16px;">
+            ＋ 新增一首鼓譜
+          </button>
+        </div>
+      </div>
+
+      <div class="manager-table-wrap">
+        <table class="song-mgmt-table">
+          <thead>
+            <tr>
+              <th style="width: 28%;">曲名與主題</th>
+              <th style="width: 12%;">速度 (BPM)</th>
+              <th style="width: 14%;">拍號 / 切分</th>
+              <th style="width: 12%;">小節數</th>
+              <th style="width: 12%;">難度</th>
+              <th style="width: 22%;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="mgmt-song-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="action-bar-bottom" style="margin-top:10px;">
+      <button class="kenney-cta-btn blue" id="btn-mgmt-back-to-select">
+        <img src="assets/ui/icon_music.png" alt="">
+        <span>返回學生選曲練習</span>
+      </button>
     </div>
   </div>
 
@@ -1440,7 +1605,6 @@
         <button class="tab-btn" data-tab="tab-calib">2. 鼓面/鼓邊特徵</button>
         <button class="tab-btn" data-tab="tab-latency">3. 延遲節拍校準</button>
         <button class="tab-btn" data-tab="tab-system">4. 團練與角色</button>
-        <button class="tab-btn" data-tab="tab-editor-entry">5. 老師製譜與雲端同步</button>
       </div>
 
       <div class="tab-content active" id="tab-mic">
@@ -1563,38 +1727,6 @@
           </select>
         </div>
       </div>
-
-      <div class="tab-content" id="tab-editor-entry">
-        <div class="row-field">
-          <div>
-            <b style="color:var(--gold); font-size:16px;">🎼 老師圖像化曲譜編輯器</b>
-            <div style="font-size: 13px; color: var(--text-dim);">以小節為單位點選編輯鼓譜，自訂 BPM 速度、拍號與鼓點</div>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn-action primary" id="btn-open-editor-new">＋ 建立全新曲目</button>
-            <button class="btn-action" id="btn-open-editor-current">編輯當前曲目</button>
-          </div>
-        </div>
-
-        <div class="row-field">
-          <div>
-            <b>Google 試算表雲端同步</b>
-            <div style="font-size: 13px; color: var(--text-dim);" id="sync-status-text">曲庫與試算表雙向串接</div>
-          </div>
-          <button class="btn-action" id="btn-sync-sheet-now">從試算表重新載入曲庫</button>
-        </div>
-
-        <div class="row-field">
-          <div>
-            <b>曲譜資料匯出 / 匯入 (JSON)</b>
-            <div style="font-size: 13px; color: var(--text-dim);">可將編輯好的鼓譜代碼備份或傳遞給其他老師</div>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn-action" id="btn-export-songs-json">匯出曲庫</button>
-            <button class="btn-action" id="btn-import-songs-json">匯入曲譜</button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1690,26 +1822,34 @@
         </div>
       </div>
 
-      <!-- 鼓點筆刷選擇器 -->
+      <!-- 鼓點筆刷選擇器與快速鍵說明 -->
       <div class="brush-selector-bar">
         <div class="brush-tools">
-          <span style="font-size:14px; font-weight:700; color:var(--text-dim);">點擊格子放置：</span>
-          <button class="brush-btn active" id="brush-don" data-brush="D">
+          <span style="font-size:14px; font-weight:700; color:var(--text-dim);">鼓點筆刷：</span>
+          <button class="brush-btn active" id="brush-don" data-brush="D" title="快捷鍵：1">
             <img src="assets/ui/round_red.png" alt="">
             <span style="color:#ff6b81;">咚 (鼓面)</span>
+            <span class="shortcut-badge">鍵盤 1</span>
           </button>
-          <button class="brush-btn" id="brush-ka" data-brush="K">
+          <button class="brush-btn" id="brush-ka" data-brush="K" title="快捷鍵：2">
             <img src="assets/ui/round_blue.png" alt="">
             <span style="color:#54a0ff;">咔 (鼓邊)</span>
+            <span class="shortcut-badge">鍵盤 2</span>
           </button>
-          <button class="brush-btn" id="brush-erase" data-brush=".">
-            <span style="font-size:18px;">🧹</span>
-            <span>清除 (休止)</span>
+          <button class="brush-btn" id="brush-erase" data-brush="." title="快捷鍵：空白鍵">
+            <span style="font-size:16px;">🧹</span>
+            <span>休止 (空拍)</span>
+            <span class="shortcut-badge">空白鍵 Space</span>
           </button>
         </div>
-        <div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
+            <span>滑鼠停留按鍵輸入即自動往後跳拍 ·</span>
+            <span class="shortcut-badge">N</span>
+            <span>新增小節</span>
+          </span>
           <button class="bar-action-mini" id="btn-ed-add-bar" style="background:#2b3658; color:var(--gold); border-color:var(--gold); font-size:14px; padding:6px 14px;">
-            ＋ 新增一個小節
+            ＋ 新增小節 (N)
           </button>
         </div>
       </div>
@@ -2659,6 +2799,77 @@ $("slider-offset").oninput = e => {
 let currentBrush = "D"; // 'D', 'K', '.'
 let editingSong = null;
 let edPreviewTimer = null;
+let hoveredSlot = null; // 記錄目前滑鼠游標停留在哪一個格子 { barIdx, slotIdx }
+
+// 獨立曲目管理庫列表渲染
+function renderSongManagerTable() {
+  const tbody = $("mgmt-song-tbody");
+  tbody.innerHTML = "";
+  $("mgmt-song-count").textContent = SONGS.length;
+
+  SONGS.forEach((song, idx) => {
+    const tr = document.createElement("tr");
+    let starsHtml = "";
+    for (let i = 1; i <= 5; i++) {
+      starsHtml += `<img src="assets/ui/${i <= song.stars ? "star_full.png" : "star_empty.png"}" alt="★" style="width:16px; height:16px;">`;
+    }
+
+    const themeName = song.theme === "grass" ? "綠野草原" : song.theme === "fall" ? "楓紅秋意" : "古城十鼓";
+
+    tr.innerHTML = `
+      <td>
+        <div class="table-song-title">
+          <img src="${song.mascot || 'assets/chars/panda.png'}" alt="">
+          <div>
+            <div>${song.title}</div>
+            <div style="font-size:12px; color:var(--text-dim); font-weight:normal;">${song.desc || themeName}</div>
+          </div>
+        </div>
+      </td>
+      <td><span style="font-family:var(--font-num); font-size:16px; color:var(--gold); font-variant-numeric:tabular-nums;">${song.bpm}</span></td>
+      <td>${song.beats_per_bar || 4}/4 拍 · ${song.grid || 16}分</td>
+      <td><span style="font-family:var(--font-num); font-variant-numeric:tabular-nums;">${song.pattern.length}</span> 小節</td>
+      <td>${starsHtml}</td>
+      <td>
+        <button class="btn-row-action edit" data-action="edit-song" data-idx="${idx}">✏️ 編輯鼓譜</button>
+        <button class="btn-row-action" data-action="play-song" data-idx="${idx}">▶ 試打</button>
+        <button class="btn-row-action del" data-action="del-song" data-idx="${idx}">✕ 刪除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("[data-action]").forEach(btn => {
+    btn.onclick = (e) => {
+      const act = e.currentTarget.dataset.action;
+      const idx = parseInt(e.currentTarget.dataset.idx);
+      const song = SONGS[idx];
+      if (act === "edit-song") {
+        playSfx("click");
+        initEditorWithSong(song);
+      } else if (act === "play-song") {
+        playSfx("click");
+        currentSongIndex = idx;
+        loadSong(song);
+        $("view-song-manager").classList.add("hidden");
+        $("view-song-select").classList.add("hidden");
+        startGame();
+      } else if (act === "del-song") {
+        if (SONGS.length <= 1) {
+          alert("曲庫至少需保留一首曲目！");
+          return;
+        }
+        if (confirm(`確定要刪除「${song.title}」這首曲譜嗎？`)) {
+          SONGS.splice(idx, 1);
+          localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
+          renderSongManagerTable();
+          renderSongCards();
+          playSfx("clear");
+        }
+      }
+    };
+  });
+}
 
 function initEditorWithSong(song = null) {
   if (!song) {
@@ -2682,6 +2893,7 @@ function initEditorWithSong(song = null) {
     editingSong = JSON.parse(JSON.stringify(song));
   }
 
+  hoveredSlot = { barIdx: 0, slotIdx: 0 };
   $("ed-title").value = editingSong.title;
   $("ed-bpm").value = editingSong.bpm;
   $("ed-beats").value = editingSong.beats_per_bar || 4;
@@ -2733,7 +2945,13 @@ function renderEditorBars() {
       const char = fullBar[i] || ".";
       const slot = document.createElement("div");
       slot.className = "grid-slot";
+      slot.dataset.bar = barIdx;
+      slot.dataset.slot = i;
       if (i % slotsPerBeat === 0) slot.classList.add("beat-start");
+
+      if (hoveredSlot && hoveredSlot.barIdx === barIdx && hoveredSlot.slotIdx === i) {
+        slot.classList.add("cursor-active");
+      }
 
       if (char === "D") {
         slot.classList.add("filled-don");
@@ -2743,17 +2961,17 @@ function renderEditorBars() {
         slot.innerHTML = `<div class="grid-slot-marker ka">咔</div>`;
       }
 
+      // 滑鼠懸停標記游標位置
+      slot.onmouseenter = () => {
+        hoveredSlot = { barIdx, slotIdx: i };
+        updateCursorVisual();
+      };
+
       slot.onclick = () => {
-        // 若選取當前相同的筆刷，則切換成清除；否則套用筆刷
+        hoveredSlot = { barIdx, slotIdx: i };
         let nextChar = currentBrush;
         if (char === currentBrush) nextChar = ".";
-        const arr = fullBar.split("");
-        arr[i] = nextChar;
-        editingSong.pattern[barIdx] = arr.join("");
-        if (nextChar === "D") playSfx("don");
-        else if (nextChar === "K") playSfx("ka");
-        else playSfx("click");
-        renderEditorBars();
+        applyNoteToSlot(barIdx, i, nextChar, true);
       };
       slotsGrid.appendChild(slot);
     }
@@ -2766,8 +2984,8 @@ function renderEditorBars() {
   // 綁定小節操作按鈕
   container.querySelectorAll("[data-action]").forEach(btn => {
     btn.onclick = (e) => {
-      const act = e.target.dataset.action;
-      const idx = parseInt(e.target.dataset.idx);
+      const act = e.currentTarget.dataset.action;
+      const idx = parseInt(e.currentTarget.dataset.idx);
       if (act === "play-bar") {
         playSingleBar(editingSong.pattern[idx], parseInt($("ed-bpm").value));
       } else if (act === "copy-bar") {
@@ -2786,6 +3004,54 @@ function renderEditorBars() {
       }
     };
   });
+}
+
+function updateCursorVisual() {
+  document.querySelectorAll(".grid-slot").forEach(slot => {
+    const b = parseInt(slot.dataset.bar);
+    const s = parseInt(slot.dataset.slot);
+    if (hoveredSlot && hoveredSlot.barIdx === b && hoveredSlot.slotIdx === s) {
+      slot.classList.add("cursor-active");
+    } else {
+      slot.classList.remove("cursor-active");
+    }
+  });
+}
+
+// 寫入鼓點並自動跳到下一拍 (方便老師連續盲打)
+function applyNoteToSlot(barIdx, slotIdx, char, autoAdvance = true) {
+  const grid = parseInt($("ed-grid").value) || 16;
+  let fullBar = (editingSong.pattern[barIdx] || "").padEnd(grid, ".");
+  const arr = fullBar.split("");
+  arr[slotIdx] = char;
+  editingSong.pattern[barIdx] = arr.join("");
+
+  if (char === "D") playSfx("don");
+  else if (char === "K") playSfx("ka");
+  else playSfx("click");
+
+  // 自動往下一格移動
+  if (autoAdvance) {
+    let nextSlot = slotIdx + 1;
+    let nextBar = barIdx;
+    if (nextSlot >= grid) {
+      nextSlot = 0;
+      nextBar = barIdx + 1;
+      // 若超過現有小節，自動新增一個小節！
+      if (nextBar >= editingSong.pattern.length) {
+        editingSong.pattern.push(".".repeat(grid));
+      }
+    }
+    hoveredSlot = { barIdx: nextBar, slotIdx: nextSlot };
+  }
+
+  renderEditorBars();
+
+  // 若游標跳到了畫面下方，平滑滾動使其保持可見
+  const activeEl = document.querySelector(".grid-slot.cursor-active");
+  if (activeEl) {
+    activeEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
 }
 
 function playSingleBar(barStr, bpm) {
@@ -2814,12 +3080,46 @@ document.querySelectorAll(".brush-btn").forEach(btn => {
 // 新增小節
 $("btn-ed-add-bar").onclick = () => {
   playSfx("click");
+  addNewMeasure();
+};
+
+function addNewMeasure() {
   const grid = parseInt($("ed-grid").value) || 16;
   editingSong.pattern.push(".".repeat(grid));
+  hoveredSlot = { barIdx: editingSong.pattern.length - 1, slotIdx: 0 };
   renderEditorBars();
   const container = $("editor-bars-container");
   container.scrollTop = container.scrollHeight;
-};
+}
+
+// 快捷鍵支援：在編輯器開啟時，按「1」=咚、「2」=咔、「空白鍵」=休息，並自動跳到下一拍；按「N」=新增小節
+window.addEventListener("keydown", e => {
+  const editorModal = $("modal-editor");
+  if (!editorModal || !editorModal.classList.contains("active")) return;
+
+  // 若使用者正在輸入曲名或 BPM 數值 input，不攔截打字
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+    return;
+  }
+
+  const k = e.key;
+  if (k === "1") {
+    e.preventDefault();
+    if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "D", true);
+  } else if (k === "2") {
+    e.preventDefault();
+    if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, "K", true);
+  } else if (k === " " || k === "Spacebar") {
+    e.preventDefault();
+    if (!hoveredSlot) hoveredSlot = { barIdx: 0, slotIdx: 0 };
+    applyNoteToSlot(hoveredSlot.barIdx, hoveredSlot.slotIdx, ".", true);
+  } else if (k === "n" || k === "N") {
+    e.preventDefault();
+    addNewMeasure();
+  }
+});
 
 // 完整試聽
 $("btn-ed-preview").onclick = () => {
@@ -2865,8 +3165,9 @@ $("btn-ed-save-local").onclick = () => {
 
   localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
   renderSongCards();
+  renderSongManagerTable();
   playSfx("clear");
-  alert(`「${song.title}」已成功儲存至本機曲庫！可直接在選曲清單開始練習。`);
+  alert(`「${song.title}」已成功儲存至曲庫！`);
 };
 
 $("btn-ed-save-cloud").onclick = async () => {
@@ -2879,6 +3180,7 @@ $("btn-ed-save-cloud").onclick = async () => {
   else SONGS.push(song);
   localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
   renderSongCards();
+  renderSongManagerTable();
 
   // 試算表遠端推送
   await saveSongToGoogleSheet(song);
@@ -2890,35 +3192,49 @@ $("btn-ed-save-cloud").onclick = async () => {
 $("btn-close-editor").onclick = () => {
   playSfx("click");
   $("modal-editor").classList.remove("active");
+  // 若管理庫頁面是開啟的，重新整理列表
+  if (!$("view-song-manager").classList.contains("hidden")) {
+    renderSongManagerTable();
+  }
 };
 
-// 快捷開啟編輯器按鈕
-$("btn-open-editor-direct").onclick = () => {
+// 切換至獨立曲目管理庫畫面
+function openSongManagerView() {
+  gameState = "IDLE";
+  $("view-song-select").classList.add("hidden");
+  $("view-song-manager").classList.remove("hidden");
+  renderSongManagerTable();
+}
+
+$("btn-open-song-mgmt").onclick = () => {
   playSfx("click");
-  initEditorWithSong(SONGS[currentSongIndex]);
+  openSongManagerView();
 };
 
-$("btn-home-create-song").onclick = () => {
+$("btn-home-manage-songs").onclick = () => {
+  playSfx("click");
+  openSongManagerView();
+};
+
+$("btn-mgmt-back-to-select").onclick = () => {
+  playSfx("click");
+  $("view-song-manager").classList.add("hidden");
+  $("view-song-select").classList.remove("hidden");
+  renderSongCards();
+};
+
+$("btn-mgmt-new-song").onclick = () => {
   playSfx("click");
   initEditorWithSong(null);
 };
 
-$("btn-open-editor-new").onclick = () => {
+$("btn-mgmt-sync-sheet").onclick = async () => {
   playSfx("click");
-  initEditorWithSong(null);
+  await fetchSongsFromGoogleSheet();
+  renderSongManagerTable();
 };
 
-$("btn-open-editor-current").onclick = () => {
-  playSfx("click");
-  initEditorWithSong(SONGS[currentSongIndex]);
-};
-
-$("btn-sync-sheet-now").onclick = () => {
-  playSfx("click");
-  fetchSongsFromGoogleSheet();
-};
-
-$("btn-export-songs-json").onclick = () => {
+$("btn-mgmt-export-json").onclick = () => {
   const str = JSON.stringify(SONGS, null, 2);
   const blob = new Blob([str], { type: "application/json" });
   const a = document.createElement("a");
@@ -2927,7 +3243,7 @@ $("btn-export-songs-json").onclick = () => {
   a.click();
 };
 
-$("btn-import-songs-json").onclick = () => {
+$("btn-mgmt-import-json").onclick = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".json";
@@ -2942,6 +3258,7 @@ $("btn-import-songs-json").onclick = () => {
           SONGS = imported;
           localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
           renderSongCards();
+          renderSongManagerTable();
           alert(`成功匯入 ${SONGS.length} 首曲目！`);
         }
       } catch (err) {
