@@ -1028,6 +1028,238 @@
     color: var(--gold);
     font-variant-numeric: tabular-nums;
   }
+
+  /* 老師圖像化曲譜編輯器全螢幕 Modal */
+  .modal-overlay.editor-overlay {
+    z-index: 150;
+  }
+  .editor-card {
+    width: 96%;
+    height: 94%;
+    max-width: 1400px;
+    background: #171c2e;
+    border: 4px solid var(--gold);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.9);
+    overflow: hidden;
+  }
+  .editor-header {
+    background: #111524;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    outline: 1px solid #333e63;
+  }
+  .editor-header h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .editor-top-toolbar {
+    background: #1b2238;
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    border-bottom: 2px solid #2b3656;
+  }
+  .editor-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+  .editor-field input, .editor-field select {
+    background: #0d111d;
+    border: 2px solid #3c4974;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 700;
+    font-family: var(--font-ui);
+  }
+  .editor-field input[type="number"] {
+    width: 80px;
+  }
+
+  /* 筆刷選擇器工具列 */
+  .brush-selector-bar {
+    background: #14192b;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #2b3656;
+  }
+  .brush-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brush-btn {
+    border: 3px solid #3c4974;
+    border-radius: 12px;
+    background: #1d253f;
+    color: #ffffff;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  .brush-btn img {
+    width: 22px;
+    height: 22px;
+  }
+  .brush-btn.active {
+    border-color: var(--gold);
+    background: #2b3658;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  /* 核心小節編輯工作區 (滾動區) */
+  .editor-bars-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: #111524;
+  }
+  .bar-row-card {
+    background: #1a2035;
+    border: 2px solid #36446b;
+    border-radius: 14px;
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  }
+  .bar-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .bar-index-tag {
+    background: #2b3558;
+    color: var(--gold);
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    border: 1px solid #485888;
+  }
+  .bar-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .bar-action-mini {
+    background: #232b45;
+    border: 1px solid #404f7a;
+    color: var(--text-dim);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .bar-action-mini:hover {
+    color: #ffffff;
+    border-color: var(--gold);
+  }
+
+  /* 16 拍打擊網格槽位 */
+  .bar-grid-slots {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 6px;
+    background: #0f1322;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #2b3656;
+  }
+  .grid-slot {
+    height: 52px;
+    background: #181f33;
+    border: 2px solid #2c385c;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.08s, background-color 0.08s;
+  }
+  .grid-slot.beat-start {
+    border-left: 3px solid var(--gold);
+  }
+  .grid-slot:hover {
+    background: #252e4d;
+    transform: translateY(-2px);
+  }
+  .grid-slot.filled-don {
+    background: #471b26;
+    border-color: #ff4757;
+  }
+  .grid-slot.filled-ka {
+    background: #172d4a;
+    border-color: #2e86de;
+  }
+  .grid-slot-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    color: #ffffff;
+  }
+  .grid-slot-marker.don {
+    background: #ff4757;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  .grid-slot-marker.ka {
+    background: #2e86de;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    border: 2px solid #ffffff;
+  }
+
+  /* 底部儲存與試聽列 */
+  .editor-footer {
+    background: #111524;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    outline: 1px solid #333e63;
+  }
+  .editor-footer-left, .editor-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 </style>
 </head>
 <body>
@@ -1067,6 +1299,9 @@
       </div>
       <button class="kenney-icon-btn yellow" id="btn-open-songs" title="選擇曲目">
         <img src="assets/ui/icon_music.png" alt="選曲">
+      </button>
+      <button class="kenney-icon-btn" id="btn-open-editor-direct" title="老師製譜編輯器" style="background-image:url('assets/ui/btn_green.png');">
+        <img src="assets/icons/musical-score.svg" alt="製譜" style="filter:invert(1);">
       </button>
       <button class="kenney-icon-btn blue" id="btn-open-settings" title="校準與設定">
         <img src="assets/ui/icon_gear.png" alt="設定">
@@ -1169,6 +1404,10 @@
         <img src="assets/ui/icon_gear.png" alt="">
         <span>麥克風與鼓聲校準</span>
       </button>
+      <button class="kenney-cta-btn green" id="btn-home-create-song">
+        <img src="assets/icons/musical-score.svg" alt="" style="filter:invert(1);">
+        <span>老師編寫新曲譜</span>
+      </button>
       <button class="kenney-cta-btn" id="btn-start-game">
         <img src="assets/icons/drum.svg" alt="">
         <span>開始打鼓練習！</span>
@@ -1201,6 +1440,7 @@
         <button class="tab-btn" data-tab="tab-calib">2. 鼓面/鼓邊特徵</button>
         <button class="tab-btn" data-tab="tab-latency">3. 延遲節拍校準</button>
         <button class="tab-btn" data-tab="tab-system">4. 團練與角色</button>
+        <button class="tab-btn" data-tab="tab-editor-entry">5. 老師製譜與雲端同步</button>
       </div>
 
       <div class="tab-content active" id="tab-mic">
@@ -1323,6 +1563,38 @@
           </select>
         </div>
       </div>
+
+      <div class="tab-content" id="tab-editor-entry">
+        <div class="row-field">
+          <div>
+            <b style="color:var(--gold); font-size:16px;">🎼 老師圖像化曲譜編輯器</b>
+            <div style="font-size: 13px; color: var(--text-dim);">以小節為單位點選編輯鼓譜，自訂 BPM 速度、拍號與鼓點</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action primary" id="btn-open-editor-new">＋ 建立全新曲目</button>
+            <button class="btn-action" id="btn-open-editor-current">編輯當前曲目</button>
+          </div>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>Google 試算表雲端同步</b>
+            <div style="font-size: 13px; color: var(--text-dim);" id="sync-status-text">曲庫與試算表雙向串接</div>
+          </div>
+          <button class="btn-action" id="btn-sync-sheet-now">從試算表重新載入曲庫</button>
+        </div>
+
+        <div class="row-field">
+          <div>
+            <b>曲譜資料匯出 / 匯入 (JSON)</b>
+            <div style="font-size: 13px; color: var(--text-dim);">可將編輯好的鼓譜代碼備份或傳遞給其他老師</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action" id="btn-export-songs-json">匯出曲庫</button>
+            <button class="btn-action" id="btn-import-songs-json">匯入曲譜</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1356,6 +1628,109 @@
       <div style="display:flex; justify-content:center; gap:18px; margin-top:8px;">
         <button class="kenney-cta-btn blue" id="btn-res-back">返回選曲</button>
         <button class="kenney-cta-btn" id="btn-res-retry">再練一次！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 老師圖像化曲譜編輯器全螢幕 Modal -->
+  <div class="modal-overlay editor-overlay" id="modal-editor">
+    <div class="editor-card">
+      <div class="editor-header">
+        <h2>
+          <img src="assets/icons/musical-score.svg" alt="" style="width:28px; height:28px; filter:invert(1);">
+          <span>十鼓隊曲譜編輯器（老師教學專用）</span>
+        </h2>
+        <button class="kenney-icon-btn red" id="btn-close-editor" title="關閉">
+          <span style="font-weight:900; font-size:18px; color:#fff;">✕</span>
+        </button>
+      </div>
+
+      <!-- 頂部曲目基本設定列 (節奏、速度、難度) -->
+      <div class="editor-top-toolbar">
+        <div class="editor-field">
+          <label>曲名：</label>
+          <input type="text" id="ed-title" value="新創作鼓譜" style="width: 170px;">
+        </div>
+        <div class="editor-field">
+          <label>速度 (BPM)：</label>
+          <input type="number" id="ed-bpm" value="100" min="40" max="240" step="2">
+        </div>
+        <div class="editor-field">
+          <label>拍號：</label>
+          <select id="ed-beats">
+            <option value="4" selected>4/4 拍 (每小節 4 大拍)</option>
+            <option value="3">3/4 拍 (每小節 3 大拍)</option>
+            <option value="2">2/4 拍 (每小節 2 大拍)</option>
+          </select>
+        </div>
+        <div class="editor-field">
+          <label>切分度：</label>
+          <select id="ed-grid">
+            <option value="16" selected>16 分音符 (每拍 4 點)</option>
+            <option value="8">8 分音符 (每拍 2 點)</option>
+          </select>
+        </div>
+        <div class="editor-field">
+          <label>難度星級：</label>
+          <select id="ed-stars">
+            <option value="1">★☆☆☆☆ (初學)</option>
+            <option value="2">★★☆☆☆ (基礎)</option>
+            <option value="3" selected>★★★☆☆ (中級)</option>
+            <option value="4">★★★★☆ (進階)</option>
+            <option value="5">★★★★★ (大師)</option>
+          </select>
+        </div>
+        <div class="editor-field">
+          <label>背景主題：</label>
+          <select id="ed-theme">
+            <option value="castles">古城十鼓 (Castles)</option>
+            <option value="grass">綠野草原 (Grass)</option>
+            <option value="fall">楓紅秋意 (Fall)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 鼓點筆刷選擇器 -->
+      <div class="brush-selector-bar">
+        <div class="brush-tools">
+          <span style="font-size:14px; font-weight:700; color:var(--text-dim);">點擊格子放置：</span>
+          <button class="brush-btn active" id="brush-don" data-brush="D">
+            <img src="assets/ui/round_red.png" alt="">
+            <span style="color:#ff6b81;">咚 (鼓面)</span>
+          </button>
+          <button class="brush-btn" id="brush-ka" data-brush="K">
+            <img src="assets/ui/round_blue.png" alt="">
+            <span style="color:#54a0ff;">咔 (鼓邊)</span>
+          </button>
+          <button class="brush-btn" id="brush-erase" data-brush=".">
+            <span style="font-size:18px;">🧹</span>
+            <span>清除 (休止)</span>
+          </button>
+        </div>
+        <div>
+          <button class="bar-action-mini" id="btn-ed-add-bar" style="background:#2b3658; color:var(--gold); border-color:var(--gold); font-size:14px; padding:6px 14px;">
+            ＋ 新增一個小節
+          </button>
+        </div>
+      </div>
+
+      <!-- 核心小節列表滾動區 -->
+      <div class="editor-bars-scroll" id="editor-bars-container"></div>
+
+      <!-- 底部操作列 (試聽、儲存至試算表) -->
+      <div class="editor-footer">
+        <div class="editor-footer-left">
+          <button class="btn-action primary" id="btn-ed-preview">
+            <span>▶ 試聽鼓譜音效</span>
+          </button>
+          <span id="ed-status-msg" style="font-size:14px; font-weight:700; color:var(--text-dim);">點擊格子可快速切換 咚／咔／空拍</span>
+        </div>
+        <div class="editor-footer-right">
+          <button class="btn-action" id="btn-ed-save-local">暫存至本機</button>
+          <button class="btn-action primary" id="btn-ed-save-cloud" style="background-image:url('assets/ui/btn_green.png'); color:#fff;">
+            <span>☁ 儲存並同步至 Google 試算表</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1428,8 +1803,10 @@ function playSfx(name, when = 0, volume = 0.85) {
   src.start(when || ctx.currentTime);
 }
 
-// ==================== 2. 曲目資料庫（支援未來試算表同步） ====================
-const SONGS = [
+// ==================== 2. 曲目資料庫與 Google 試算表連線 ====================
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz9-zwSunT8vATxGeuuJ23tYd1fJs58C7cfXhgbVvJS7jX_KBgYZzVVQtowqnFE5bDh/exec";
+
+let SONGS = [
   {
     id: "s01",
     title: "十鼓迎賓練習曲",
@@ -1497,6 +1874,60 @@ const SONGS = [
     ]
   }
 ];
+
+// 本機快取曲目存取
+function loadCachedSongs() {
+  try {
+    const raw = localStorage.getItem("shigu_custom_songs");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        SONGS = parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("載入本機曲庫快取失敗", e);
+  }
+}
+loadCachedSongs();
+
+// 從 Google 試算表拉取最新曲目
+async function fetchSongsFromGoogleSheet() {
+  $("sync-status-text").textContent = "正在連線 Google 試算表同步曲目...";
+  try {
+    const res = await fetch(GAS_API_URL + "?action=getSongs", { mode: "cors" });
+    const json = await res.json();
+    if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
+      SONGS = json.data;
+      localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
+      renderSongCards();
+      $("sync-status-text").textContent = `同步成功！已載入 ${SONGS.length} 首雲端曲目`;
+      return true;
+    } else {
+      $("sync-status-text").textContent = "試算表曲庫需開放權限，目前使用本機快取";
+      return false;
+    }
+  } catch (err) {
+    $("sync-status-text").textContent = "連線試算表受限 (可在試算表編輯或發布)，已使用本機曲庫";
+    return false;
+  }
+}
+
+// 儲存曲目至 Google 試算表
+async function saveSongToGoogleSheet(song) {
+  try {
+    const res = await fetch(GAS_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "saveSong", song: song })
+    });
+    return true;
+  } catch (err) {
+    console.warn("同步至試算表失敗", err);
+    return false;
+  }
+}
 
 let currentSongIndex = 0;
 let gameState = "IDLE";
@@ -2222,6 +2653,304 @@ $("select-char-skin").onchange = e => {
 $("slider-offset").oninput = e => {
   latencyOffsetMs = +e.target.value;
   $("offset-num").textContent = latencyOffsetMs + " ms";
+};
+
+// ==================== 7. 老師圖像化曲譜編輯器邏輯 ====================
+let currentBrush = "D"; // 'D', 'K', '.'
+let editingSong = null;
+let edPreviewTimer = null;
+
+function initEditorWithSong(song = null) {
+  if (!song) {
+    editingSong = {
+      id: "custom_" + Date.now(),
+      title: "自訂練習曲",
+      bpm: 100,
+      beats_per_bar: 4,
+      grid: 16,
+      stars: 3,
+      theme: "castles",
+      mascot: "assets/chars/panda.png",
+      offset_ms: 0,
+      desc: "由十鼓隊老師自訂編寫之鼓譜",
+      pattern: [
+        "D...D...K...K...",
+        "D.D.D.D.K.K.K.K."
+      ]
+    };
+  } else {
+    editingSong = JSON.parse(JSON.stringify(song));
+  }
+
+  $("ed-title").value = editingSong.title;
+  $("ed-bpm").value = editingSong.bpm;
+  $("ed-beats").value = editingSong.beats_per_bar || 4;
+  $("ed-grid").value = editingSong.grid || 16;
+  $("ed-stars").value = editingSong.stars || 3;
+  $("ed-theme").value = editingSong.theme || "castles";
+
+  renderEditorBars();
+  $("modal-settings").classList.remove("active");
+  $("modal-editor").classList.add("active");
+}
+
+function renderEditorBars() {
+  const container = $("editor-bars-container");
+  container.innerHTML = "";
+  const grid = parseInt($("ed-grid").value) || 16;
+  const beats = parseInt($("ed-beats").value) || 4;
+
+  editingSong.pattern.forEach((barStr, barIdx) => {
+    // 補齊長度
+    let fullBar = barStr.padEnd(grid, ".");
+    if (fullBar.length > grid) fullBar = fullBar.slice(0, grid);
+
+    const card = document.createElement("div");
+    card.className = "bar-row-card";
+
+    const header = document.createElement("div");
+    header.className = "bar-row-header";
+    header.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="bar-index-tag">第 ${barIdx + 1} 小節</span>
+        <span style="font-size:13px; color:var(--text-dim);">${beats}/4 拍 · ${grid} 切分</span>
+      </div>
+      <div class="bar-actions">
+        <button class="bar-action-mini" data-action="play-bar" data-idx="${barIdx}">▶ 試聽本小節</button>
+        <button class="bar-action-mini" data-action="copy-bar" data-idx="${barIdx}">📋 複製</button>
+        <button class="bar-action-mini" data-action="clear-bar" data-idx="${barIdx}">🧹 清空</button>
+        <button class="bar-action-mini" data-action="del-bar" data-idx="${barIdx}" style="color:#ff6b81;">✕ 刪除</button>
+      </div>
+    `;
+
+    const slotsGrid = document.createElement("div");
+    slotsGrid.className = "bar-grid-slots";
+    slotsGrid.style.gridTemplateColumns = `repeat(${grid}, 1fr)`;
+
+    const slotsPerBeat = grid / beats;
+
+    for (let i = 0; i < grid; i++) {
+      const char = fullBar[i] || ".";
+      const slot = document.createElement("div");
+      slot.className = "grid-slot";
+      if (i % slotsPerBeat === 0) slot.classList.add("beat-start");
+
+      if (char === "D") {
+        slot.classList.add("filled-don");
+        slot.innerHTML = `<div class="grid-slot-marker don">咚</div>`;
+      } else if (char === "K") {
+        slot.classList.add("filled-ka");
+        slot.innerHTML = `<div class="grid-slot-marker ka">咔</div>`;
+      }
+
+      slot.onclick = () => {
+        // 若選取當前相同的筆刷，則切換成清除；否則套用筆刷
+        let nextChar = currentBrush;
+        if (char === currentBrush) nextChar = ".";
+        const arr = fullBar.split("");
+        arr[i] = nextChar;
+        editingSong.pattern[barIdx] = arr.join("");
+        if (nextChar === "D") playSfx("don");
+        else if (nextChar === "K") playSfx("ka");
+        else playSfx("click");
+        renderEditorBars();
+      };
+      slotsGrid.appendChild(slot);
+    }
+
+    card.appendChild(header);
+    card.appendChild(slotsGrid);
+    container.appendChild(card);
+  });
+
+  // 綁定小節操作按鈕
+  container.querySelectorAll("[data-action]").forEach(btn => {
+    btn.onclick = (e) => {
+      const act = e.target.dataset.action;
+      const idx = parseInt(e.target.dataset.idx);
+      if (act === "play-bar") {
+        playSingleBar(editingSong.pattern[idx], parseInt($("ed-bpm").value));
+      } else if (act === "copy-bar") {
+        editingSong.pattern.splice(idx + 1, 0, editingSong.pattern[idx]);
+        renderEditorBars();
+      } else if (act === "clear-bar") {
+        editingSong.pattern[idx] = ".".repeat(grid);
+        renderEditorBars();
+      } else if (act === "del-bar") {
+        if (editingSong.pattern.length <= 1) {
+          alert("至少保留一個小節！");
+          return;
+        }
+        editingSong.pattern.splice(idx, 1);
+        renderEditorBars();
+      }
+    };
+  });
+}
+
+function playSingleBar(barStr, bpm) {
+  const ctx = ensureAudioContext();
+  const secPerBeat = 60 / bpm;
+  const grid = barStr.length;
+  const secPerGrid = (secPerBeat * 4) / grid;
+  const now = ctx.currentTime + 0.1;
+  for (let i = 0; i < grid; i++) {
+    const ch = barStr[i];
+    if (ch === "D") playSfx("don", now + i * secPerGrid);
+    else if (ch === "K") playSfx("ka", now + i * secPerGrid);
+  }
+}
+
+// 筆刷切換
+document.querySelectorAll(".brush-btn").forEach(btn => {
+  btn.onclick = () => {
+    playSfx("click");
+    document.querySelectorAll(".brush-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentBrush = btn.dataset.brush;
+  };
+});
+
+// 新增小節
+$("btn-ed-add-bar").onclick = () => {
+  playSfx("click");
+  const grid = parseInt($("ed-grid").value) || 16;
+  editingSong.pattern.push(".".repeat(grid));
+  renderEditorBars();
+  const container = $("editor-bars-container");
+  container.scrollTop = container.scrollHeight;
+};
+
+// 完整試聽
+$("btn-ed-preview").onclick = () => {
+  const bpm = parseInt($("ed-bpm").value) || 100;
+  const ctx = ensureAudioContext();
+  const secPerBeat = 60 / bpm;
+  const now = ctx.currentTime + 0.2;
+  let t = now;
+  $("ed-status-msg").textContent = "正在播放鼓譜試聽...";
+
+  editingSong.pattern.forEach((barStr) => {
+    const grid = barStr.length;
+    const secPerGrid = (secPerBeat * 4) / grid;
+    for (let i = 0; i < grid; i++) {
+      const ch = barStr[i];
+      if (ch === "D") playSfx("don", t + i * secPerGrid);
+      else if (ch === "K") playSfx("ka", t + i * secPerGrid);
+    }
+    t += secPerBeat * 4;
+  });
+
+  setTimeout(() => {
+    $("ed-status-msg").textContent = "試聽完畢！";
+  }, (t - now) * 1000);
+};
+
+// 儲存曲譜
+function collectEditorData() {
+  editingSong.title = $("ed-title").value.trim() || "未命名鼓譜";
+  editingSong.bpm = parseInt($("ed-bpm").value) || 100;
+  editingSong.beats_per_bar = parseInt($("ed-beats").value) || 4;
+  editingSong.grid = parseInt($("ed-grid").value) || 16;
+  editingSong.stars = parseInt($("ed-stars").value) || 3;
+  editingSong.theme = $("ed-theme").value;
+  return editingSong;
+}
+
+$("btn-ed-save-local").onclick = () => {
+  const song = collectEditorData();
+  const idx = SONGS.findIndex(s => s.id === song.id);
+  if (idx >= 0) SONGS[idx] = song;
+  else SONGS.push(song);
+
+  localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
+  renderSongCards();
+  playSfx("clear");
+  alert(`「${song.title}」已成功儲存至本機曲庫！可直接在選曲清單開始練習。`);
+};
+
+$("btn-ed-save-cloud").onclick = async () => {
+  const song = collectEditorData();
+  $("ed-status-msg").textContent = "正在同步至 Google 試算表...";
+
+  // 本機先儲存
+  const idx = SONGS.findIndex(s => s.id === song.id);
+  if (idx >= 0) SONGS[idx] = song;
+  else SONGS.push(song);
+  localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
+  renderSongCards();
+
+  // 試算表遠端推送
+  await saveSongToGoogleSheet(song);
+  playSfx("clear");
+  $("ed-status-msg").textContent = "已儲存！試算表同步請求已發送。";
+  alert(`「${song.title}」已儲存！\n同時已將鼓譜發送至 Google 試算表。`);
+};
+
+$("btn-close-editor").onclick = () => {
+  playSfx("click");
+  $("modal-editor").classList.remove("active");
+};
+
+// 快捷開啟編輯器按鈕
+$("btn-open-editor-direct").onclick = () => {
+  playSfx("click");
+  initEditorWithSong(SONGS[currentSongIndex]);
+};
+
+$("btn-home-create-song").onclick = () => {
+  playSfx("click");
+  initEditorWithSong(null);
+};
+
+$("btn-open-editor-new").onclick = () => {
+  playSfx("click");
+  initEditorWithSong(null);
+};
+
+$("btn-open-editor-current").onclick = () => {
+  playSfx("click");
+  initEditorWithSong(SONGS[currentSongIndex]);
+};
+
+$("btn-sync-sheet-now").onclick = () => {
+  playSfx("click");
+  fetchSongsFromGoogleSheet();
+};
+
+$("btn-export-songs-json").onclick = () => {
+  const str = JSON.stringify(SONGS, null, 2);
+  const blob = new Blob([str], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `十鼓曲庫備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+};
+
+$("btn-import-songs-json").onclick = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (Array.isArray(imported)) {
+          SONGS = imported;
+          localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
+          renderSongCards();
+          alert(`成功匯入 ${SONGS.length} 首曲目！`);
+        }
+      } catch (err) {
+        alert("匯入失敗：檔案格式不正確");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 };
 </script>
 </body>
