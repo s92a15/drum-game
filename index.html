@@ -1446,6 +1446,17 @@
   .btn-action:hover {
     transform: scale(1.04);
   }
+  @keyframes recordingPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+    70% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+  }
+  .btn-action.recording-pulse {
+    animation: recordingPulse 1.2s infinite ease-in-out;
+    background-image: url("assets/ui/btn_red.png") !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+  }
 
   .volume-meter-bar {
     height: 18px;
@@ -2335,56 +2346,104 @@
           <button class="btn-action primary" id="btn-modal-start-mic">開啟麥克風</button>
         </div>
 
+        <!-- 雙通道頻譜即時監測儀 -->
         <div class="row-field">
           <div>
-            <b>即時音量與觸發門檻</b>
-            <div style="font-size: 13px; color: var(--text-dim);">安靜時綠條應低於黃線，敲鼓時超過黃線</div>
+            <b style="color:#ff6b81;">🥁 鼓面低頻能量 (咚)</b>
+            <div style="font-size: 13px; color: var(--text-dim);">60~400Hz 鼓皮共振，黃線具動態防回音包絡</div>
           </div>
           <div style="display: flex; align-items: center; gap: 12px;">
             <div class="volume-meter-bar">
-              <div class="volume-meter-fill" id="meter-fill"></div>
-              <div class="volume-meter-th" id="meter-th-line"></div>
+              <div class="volume-meter-fill" id="meter-fill-low" style="background:#ff4757;"></div>
+              <div class="volume-meter-th" id="meter-th-low"></div>
             </div>
-            <span id="vol-num" style="font-family: var(--font-num); font-size: 15px; width: 48px;">0.05</span>
+            <span id="vol-num-low" style="font-family: var(--font-num); font-size: 15px; width: 48px; color:#ff6b81;">0.000</span>
           </div>
         </div>
 
         <div class="row-field">
-          <b>敲擊靈敏度門檻調整</b>
-          <input type="range" id="slider-threshold" min="0.005" max="0.3" step="0.005" value="0.05" style="width: 220px;">
+          <div>
+            <b style="color:#54a0ff;">🥢 鼓邊高頻能量 (咔)</b>
+            <div style="font-size: 13px; color: var(--text-dim);">1500~6000Hz 清脆木音，黃線為高頻門檻</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="volume-meter-bar">
+              <div class="volume-meter-fill" id="meter-fill-high" style="background:#2e86de;"></div>
+              <div class="volume-meter-th" id="meter-th-high"></div>
+            </div>
+            <span id="vol-num-high" style="font-family: var(--font-num); font-size: 15px; width: 48px; color:#54a0ff;">0.000</span>
+          </div>
         </div>
 
-        <div id="clip-warning" style="color: #ff6b81; font-size: 14px; font-weight: 700; display: none;">
-          ⚠️ 偵測到麥克風爆音！請將麥克風拉遠，或調低 Windows 錄音音量。
+        <div class="row-field">
+          <div>
+            <b>🎤 麥克風整體靈敏度 (自動配比)</b>
+            <div style="font-size: 13px; color: var(--text-dim);">自動以最佳黃金比例配置鼓面與鼓邊門檻</div>
+          </div>
+          <input type="range" id="slider-threshold" min="0.005" max="0.12" step="0.002" value="0.035" style="width: 200px;">
+        </div>
+
+        <div style="margin-top: 4px; display: flex; justify-content: flex-end;">
+          <button class="btn-action" id="btn-toggle-advanced-threshold" style="font-size:12px; padding:4px 12px;">⚙️ 展開進階個別門檻微調</button>
+        </div>
+
+        <div id="advanced-threshold-box" style="display:none; margin-top:8px; padding:12px 16px; background:#181e35; border:1px solid #485786; border-radius:12px;">
+          <div class="row-field" style="padding:10px 14px; margin-bottom:8px; border-color:#3a476f;">
+            <div>
+              <b style="color:#ff6b81; font-size:13px;">🥁 鼓面 (咚) 基準門檻：</b>
+              <div style="font-size: 12px; color: var(--text-dim);">建議 0.035 ~ 0.070，敲擊瞬間自動拉高防回音</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="slider-threshold-don" min="0.01" max="0.15" step="0.005" value="0.040" style="width: 150px;">
+              <span id="val-th-don" style="font-family:var(--font-num); font-size:14px; width:46px; color:#ff6b81; text-align:right;">0.040</span>
+            </div>
+          </div>
+          <div class="row-field" style="padding:10px 14px; border-color:#3a476f;">
+            <div>
+              <b style="color:#54a0ff; font-size:13px;">🥢 鼓邊 (咔) 清脆門檻：</b>
+              <div style="font-size: 12px; color: var(--text-dim);">建議 0.008 ~ 0.025，低門檻靈敏捕捉木頭清脆瞬態</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="slider-threshold-ka" min="0.003" max="0.05" step="0.002" value="0.012" style="width: 150px;">
+              <span id="val-th-ka" style="font-family:var(--font-num); font-size:14px; width:46px; color:#54a0ff; text-align:right;">0.012</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="clip-warning" style="color: #ff6b81; font-size: 14px; font-weight: 700; display: none; margin-top: 8px;">
+          ⚠️ 偵測到麥克風爆音！請將麥克風拉遠 10~20 公分，或調低電腦錄音音量。
         </div>
       </div>
 
       <div class="tab-content" id="tab-calib">
-        <p style="font-size: 14px; color: var(--text-dim);">
-          讓系統記住你這面鼓的「鼓面（低頻咚）」與「鼓邊（高頻咔）」聲音特徵，各敲 5～10 下即可：
+        <p style="font-size: 14px; color: var(--text-dim); line-height: 1.5;">
+          系統會記住您這面鼓的「鼓面（低頻咚）」與「鼓邊（高頻咔）」聲音特徵。各敲 5～8 下即可（系統每滿 5 筆將自動完成並停止）：
         </p>
         <div class="row-field">
           <div>
             <b style="color:#ff6b81;">鼓面（咚 Don）樣本收集</b>
-            <div style="font-size: 13px; color: var(--text-dim);">已收集：<strong id="calib-n-don">0</strong> 筆</div>
+            <div style="font-size: 13px; color: var(--text-dim);">已收集：<strong id="calib-n-don">0</strong> 筆 (滿 5 筆自動完成)</div>
           </div>
-          <button class="btn-action red" id="btn-calib-don">錄製「咚」鼓聲</button>
+          <button class="btn-action red" id="btn-calib-don">錄製「咚」鼓聲 (鼓面)</button>
         </div>
 
         <div class="row-field">
           <div>
             <b style="color:#54a0ff;">鼓邊（咔 Ka）樣本收集</b>
-            <div style="font-size: 13px; color: var(--text-dim);">已收集：<strong id="calib-n-ka">0</strong> 筆</div>
+            <div style="font-size: 13px; color: var(--text-dim);">已收集：<strong id="calib-n-ka">0</strong> 筆 (滿 5 筆自動完成)</div>
           </div>
-          <button class="btn-action" id="btn-calib-ka">錄製「咔」鼓聲</button>
+          <button class="btn-action" id="btn-calib-ka">錄製「咔」鼓聲 (鼓邊)</button>
         </div>
 
-        <div class="row-field">
+        <div class="row-field" style="border-top:1px dashed #3a476f; padding-top:10px;">
           <div>
             <b>自由敲擊測試辨識</b>
             <div style="font-size: 13px; color: var(--text-dim);">目前辨識結果：<strong id="calib-live-result" style="color:var(--gold); font-size:16px;">待敲擊</strong></div>
           </div>
-          <button class="btn-action" id="btn-calib-reset">清除已儲存校準</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action" id="btn-calib-stop-all" style="background:#2d3753; color:#ced6e0;">⏹️ 結束錄製</button>
+            <button class="btn-action" id="btn-calib-reset">清除已儲存校準</button>
+          </div>
         </div>
 
         <div class="row-field" style="background:#1a223c; border-color:#485686;">
@@ -2932,15 +2991,22 @@ const $ = id => document.getElementById(id);
 
 // ==================== 3. 麥克風音訊偵測與咚/咔分類演算法 ====================
 let mediaStream = null, audioProc = null, sampleRate = 44100;
-let threshold = 0.05;
+let thresholdMaster = 0.035;
+let thresholdDon = 0.040;
+let thresholdKa = 0.012;
+let dynamicDonThreshold = 0.040;
 let audioSamples = [];
 let calibMode = null;
 let lastHitTime = -1;
-let prevRms = 0;
+let prevRmsLow = 0, prevRmsHigh = 0;
 let collectingObj = null;
 let metroTestState = null;
 const WIN = 1024;
-const REFRACTORY = 0.085;
+const REFRACTORY = 0.065; // 65ms 最小防重疊冷卻時間 (支援高達 220 BPM 的十六分音符)
+const ALPHA_HP = 0.814;   // ~1600 Hz 數位高通濾波係數 (分離出鼓邊咔)
+const ALPHA_LP = 0.056;   // ~420 Hz 數位低通濾波係數 (分離出鼓面咚)
+let lp_prev_out = 0;
+let hp_prev_in = 0, hp_prev_out = 0;
 
 // 內建標準十鼓聲學特徵模型 (開箱即用：即使未校準亦可精準辨識)
 const DEFAULT_AUDIO_SAMPLES = [
@@ -2961,12 +3027,55 @@ const DEFAULT_AUDIO_SAMPLES = [
 // 本機 LocalStorage 儲存鍵值
 const CALIB_STORAGE_KEY = "shigu_drum_calibration_data";
 
+function updateThresholdUI() {
+  if ($("slider-threshold")) $("slider-threshold").value = thresholdMaster;
+  if ($("slider-threshold-don")) $("slider-threshold-don").value = thresholdDon;
+  if ($("val-th-don")) $("val-th-don").textContent = thresholdDon.toFixed(3);
+  if ($("slider-threshold-ka")) $("slider-threshold-ka").value = thresholdKa;
+  if ($("val-th-ka")) $("val-th-ka").textContent = thresholdKa.toFixed(3);
+  if ($("meter-th-low")) $("meter-th-low").style.left = Math.min(100, (thresholdDon / 0.25) * 100) + "%";
+  if ($("meter-th-high")) $("meter-th-high").style.left = Math.min(100, (thresholdKa / 0.10) * 100) + "%";
+}
+
+function updateCalibButtons() {
+  const btnDon = $("btn-calib-don");
+  const btnKa = $("btn-calib-ka");
+  const nDon = audioSamples.filter(x => x.mode === "D").length;
+  const nKa = audioSamples.filter(x => x.mode === "K").length;
+
+  if (btnDon) {
+    if (calibMode === "D") {
+      btnDon.textContent = `⏹️ 停止錄製咚 (已錄 ${nDon}/5)`;
+      btnDon.classList.add("recording-pulse");
+    } else {
+      btnDon.textContent = nDon >= 5 ? `重新錄製「咚」鼓聲 (已錄 ${nDon} 筆)` : `錄製「咚」鼓聲 (鼓面)`;
+      btnDon.classList.remove("recording-pulse");
+    }
+  }
+
+  if (btnKa) {
+    if (calibMode === "K") {
+      btnKa.textContent = `⏹️ 停止錄製咔 (已錄 ${nKa}/5)`;
+      btnKa.classList.add("recording-pulse");
+    } else {
+      btnKa.textContent = nKa >= 5 ? `重新錄製「咔」鼓聲 (已錄 ${nKa} 筆)` : `錄製「咔」鼓聲 (鼓邊)`;
+      btnKa.classList.remove("recording-pulse");
+    }
+  }
+
+  if ($("calib-n-don")) $("calib-n-don").textContent = nDon;
+  if ($("calib-n-ka")) $("calib-n-ka").textContent = nKa;
+}
+
 function saveCalibrationData() {
   try {
     const data = {
       samples: audioSamples,
-      threshold: threshold,
-      offsetMs: latencyOffsetMs
+      threshold: thresholdMaster,
+      thresholdDon: thresholdDon,
+      thresholdKa: thresholdKa,
+      offsetMs: latencyOffsetMs,
+      updated_at: new Date().toISOString()
     };
     localStorage.setItem(CALIB_STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
@@ -2982,17 +3091,26 @@ function loadCalibrationData() {
       if (Array.isArray(data.samples)) {
         audioSamples = data.samples;
       }
-      if (typeof data.threshold === "number" && !isNaN(data.threshold)) {
-        threshold = data.threshold;
-        if ($("slider-threshold")) $("slider-threshold").value = threshold;
-        if ($("meter-th-line")) $("meter-th-line").style.left = (threshold / 0.3) * 100 + "%";
+      if (typeof data.thresholdDon === "number" && !isNaN(data.thresholdDon)) {
+        thresholdDon = data.thresholdDon;
       }
+      if (typeof data.thresholdKa === "number" && !isNaN(data.thresholdKa)) {
+        thresholdKa = data.thresholdKa;
+      }
+      if (typeof data.threshold === "number" && !isNaN(data.threshold)) {
+        thresholdMaster = data.threshold;
+        if (!data.thresholdDon) thresholdDon = thresholdMaster * 1.15;
+        if (!data.thresholdKa) thresholdKa = Math.max(0.004, thresholdMaster * 0.35);
+      }
+      dynamicDonThreshold = thresholdDon;
       if (typeof data.offsetMs === "number" && !isNaN(data.offsetMs)) {
         latencyOffsetMs = data.offsetMs;
         if ($("slider-offset")) $("slider-offset").value = latencyOffsetMs;
         if ($("offset-num")) $("offset-num").textContent = latencyOffsetMs + " ms";
       }
       updateCalibUI();
+      updateCalibButtons();
+      updateThresholdUI();
       const nDon = audioSamples.filter(x => x.mode === "D").length;
       const nKa = audioSamples.filter(x => x.mode === "K").length;
       if (nDon > 0 || nKa > 0) {
@@ -3014,10 +3132,19 @@ async function fetchCalibrationFromCloud() {
     const json = await res.json();
     if (json && json.status === "success" && json.data && Array.isArray(json.data.samples) && json.data.samples.length > 0) {
       audioSamples = json.data.samples;
-      if (typeof json.data.threshold === "number") threshold = json.data.threshold;
+      if (typeof json.data.thresholdDon === "number") thresholdDon = json.data.thresholdDon;
+      if (typeof json.data.thresholdKa === "number") thresholdKa = json.data.thresholdKa;
+      if (typeof json.data.threshold === "number") {
+        thresholdMaster = json.data.threshold;
+        if (!json.data.thresholdDon) thresholdDon = thresholdMaster * 1.15;
+        if (!json.data.thresholdKa) thresholdKa = Math.max(0.004, thresholdMaster * 0.35);
+      }
+      dynamicDonThreshold = thresholdDon;
       if (typeof json.data.offsetMs === "number") latencyOffsetMs = json.data.offsetMs;
       saveCalibrationData();
       updateCalibUI();
+      updateCalibButtons();
+      updateThresholdUI();
       const nDon = audioSamples.filter(x => x.mode === "D").length;
       const nKa = audioSamples.filter(x => x.mode === "K").length;
       if ($("calib-live-result")) {
@@ -3048,7 +3175,9 @@ async function saveCalibrationToCloud() {
       action: "saveCalibration",
       calibration: {
         samples: audioSamples,
-        threshold: threshold,
+        threshold: thresholdMaster,
+        thresholdDon: thresholdDon,
+        thresholdKa: thresholdKa,
         offsetMs: latencyOffsetMs,
         updated_at: new Date().toISOString()
       }
@@ -3088,6 +3217,7 @@ async function initMicrophone() {
     $("mic-status-dot").classList.add("active");
     $("mic-status-text").textContent = "麥克風收音中";
     $("modal-mic-detail").textContent = `已連線 (${sampleRate} Hz)`;
+    updateThresholdUI();
     return true;
   } catch (err) {
     alert("無法開啟麥克風：" + err.name + " - " + err.message);
@@ -3097,17 +3227,45 @@ async function initMicrophone() {
 
 function processAudio(e) {
   const x = e.inputBuffer.getChannelData(0);
-  let sum = 0, peak = 0;
-  for (let i = 0; i < x.length; i++) {
-    sum += x[i] * x[i];
-    const a = Math.abs(x[i]);
-    if (a > peak) peak = a;
-  }
-  const rms = Math.sqrt(sum / x.length);
+  let sumTotal = 0, sumLow = 0, sumHigh = 0, peak = 0;
 
-  $("meter-fill").style.transform = `scaleX(${Math.min(1, rms / 0.3)})`;
-  $("vol-num").textContent = rms.toFixed(3);
-  if (peak > 0.98) $("clip-warning").style.display = "block";
+  for (let i = 0; i < x.length; i++) {
+    const s = x[i];
+    const absS = Math.abs(s);
+    if (absS > peak) peak = absS;
+    sumTotal += s * s;
+
+    // 420 Hz 低通濾波器 (分離鼓面咚低頻)
+    lp_prev_out = lp_prev_out + ALPHA_LP * (s - lp_prev_out);
+    sumLow += lp_prev_out * lp_prev_out;
+
+    // 1600 Hz 高通濾波器 (分離鼓邊咔高頻)
+    const hp_out = ALPHA_HP * (hp_prev_out + s - hp_prev_in);
+    hp_prev_in = s;
+    hp_prev_out = hp_out;
+    sumHigh += hp_out * hp_out;
+  }
+
+  const rmsTotal = Math.sqrt(sumTotal / x.length);
+  const rmsLow = Math.sqrt(sumLow / x.length);
+  const rmsHigh = Math.sqrt(sumHigh / x.length);
+
+  // 介面即時電平表更新
+  if ($("meter-fill-low")) {
+    $("meter-fill-low").style.transform = `scaleX(${Math.min(1, rmsLow / 0.25)})`;
+    $("vol-num-low").textContent = rmsLow.toFixed(3);
+  }
+  if ($("meter-fill-high")) {
+    $("meter-fill-high").style.transform = `scaleX(${Math.min(1, rmsHigh / 0.10)})`;
+    $("vol-num-high").textContent = rmsHigh.toFixed(3);
+  }
+  if (peak > 0.98 && $("clip-warning")) $("clip-warning").style.display = "block";
+
+  // 鼓面動態波峰衰減門檻更新：每 5.8ms 指數衰減回基準門檻
+  dynamicDonThreshold = Math.max(thresholdDon, dynamicDonThreshold * 0.88);
+  if ($("meter-th-low")) {
+    $("meter-th-low").style.left = Math.min(100, (dynamicDonThreshold / 0.25) * 100) + "%";
+  }
 
   if (collectingObj) {
     const c = collectingObj;
@@ -3119,21 +3277,46 @@ function processAudio(e) {
       collectingObj = null;
     }
   } else {
-    const now = sfxCtx.currentTime;
-    if (rms > threshold && rms > prevRms * 1.7 && (now - lastHitTime) > REFRACTORY) {
+    const now = sfxCtx ? sfxCtx.currentTime : performance.now() / 1000;
+    const timeSinceLastHit = now - lastHitTime;
+
+    // 波形瞬態峰值比 (Crest Factor) 檢驗：過濾平緩上升的人聲或笑聲
+    const crestFactor = peak / (rmsTotal + 1e-5);
+    const isPercussive = crestFactor > 1.85;
+
+    // 通道 1：鼓面 (咚) 低頻起音判定
+    const isDonTrigger = (rmsLow > dynamicDonThreshold) &&
+                         (rmsLow > prevRmsLow * 1.55) &&
+                         (timeSinceLastHit > REFRACTORY) &&
+                         isPercussive;
+
+    // 通道 2：鼓邊 (咔) 高頻清脆起音判定
+    const isKaTrigger = (rmsHigh > thresholdKa) &&
+                        (rmsHigh > prevRmsHigh * 1.50) &&
+                        (timeSinceLastHit > REFRACTORY) &&
+                        isPercussive;
+
+    if (isDonTrigger || isKaTrigger) {
       lastHitTime = now;
+      if (isDonTrigger) {
+        // 鼓面擊中瞬間：門檻瞬間拉高至當前波峰的 65%，阻斷後續數百毫秒的殘響二次觸發
+        dynamicDonThreshold = Math.max(thresholdDon, rmsLow * 0.65);
+      }
+
       let onsetIdx = 0;
       for (let i = 0; i < x.length; i++) {
-        if (Math.abs(x[i]) > peak * 0.5) { onsetIdx = i; break; }
+        if (Math.abs(x[i]) > peak * 0.45) { onsetIdx = i; break; }
       }
       const tHit = now - (x.length - onsetIdx) / sampleRate;
       const buf = new Float32Array(WIN * 2);
       let pos = 0;
       for (let i = onsetIdx; i < x.length; i++) buf[pos++] = x[i];
-      collectingObj = { buf, pos, t: tHit };
+      collectingObj = { buf, pos, t: tHit, isDonTrigger, isKaTrigger };
     }
   }
-  prevRms = rms;
+
+  prevRmsLow = rmsLow;
+  prevRmsHigh = rmsHigh;
 }
 
 function fftMag(sig) {
@@ -3182,16 +3365,49 @@ function analyzeDrumHit(c) {
   }
 
   if (calibMode === "D" || calibMode === "K") {
+    // 採樣雜訊防護：若特徵與鼓聲差異過大 (例如錄咚時混入講話聲)，自動剔除
+    const isDonRec = calibMode === "D";
+    const isOutlier = isDonRec ? (ratio > -1 || centroid > 1000) : (ratio < -1 || centroid < 1200);
+
+    if (isOutlier) {
+      if ($("calib-live-result")) {
+        $("calib-live-result").textContent = `⚠️ 偵測到環境雜音（非${isDonRec ? "鼓面" : "鼓邊"}音），已自動略過，請重新敲擊！`;
+      }
+      playSfx("miss");
+      return;
+    }
+
     audioSamples.push(sample);
     saveCalibrationData();
     updateCalibUI();
     playSfx(calibMode === "D" ? "don" : "ka");
+
+    const count = audioSamples.filter(x => x.mode === calibMode).length;
+    updateCalibButtons();
+    if ($("calib-live-result")) {
+      $("calib-live-result").textContent = `✅ 已錄製「${isDonRec ? "咚" : "咔"}」第 ${count} 筆樣本！`;
+    }
+
+    // 每收集滿 5 筆自動完成並退出錄製模式
+    if (count >= 5) {
+      const modeName = isDonRec ? "咚 (鼓面)" : "咔 (鼓邊)";
+      calibMode = null;
+      updateCalibButtons();
+      playSfx("clear");
+      if ($("calib-live-result")) {
+        $("calib-live-result").textContent = `🎉 已收集滿 5 筆${modeName}！可直接試打或錄製另一種。`;
+      }
+    }
   } else {
     const recognized = classifyHit(sample);
+    if (recognized === "NOISE") {
+      // 判定為人聲或環境雜訊，不予計分觸發
+      return;
+    }
     if (gameState === "PLAYING") {
       handlePlayerHit(recognized, c.t - (latencyOffsetMs / 1000), true);
     } else {
-      $("calib-live-result").textContent = recognized === "D" ? "咚 (鼓面)" : "咔 (鼓邊)";
+      $("calib-live-result").textContent = recognized === "D" ? "🥁 咚 (鼓面)" : "🥢 咔 (鼓邊)";
       triggerDrumVisual(recognized);
     }
   }
@@ -3212,13 +3428,20 @@ function classifyHit(s) {
     return m;
   };
   const mD = mean(D), mK = mean(K), f = feat(s);
-  const dist = m => m.reduce((a, v, i) => a + (v - f[i]) ** 2, 0);
-  return dist(mD) <= dist(mK) ? "D" : "K";
+  const dist = m => Math.sqrt(m.reduce((a, v, i) => a + (v - f[i]) ** 2, 0));
+  const distD = dist(mD);
+  const distK = dist(mK);
+
+  // 空間拒斥防線：若距離咚和咔的質心都過遠 (大於 1.45)，判定為人聲雜訊
+  if (distD > 1.45 && distK > 1.45) {
+    return "NOISE";
+  }
+
+  return distD <= distK ? "D" : "K";
 }
 
 function updateCalibUI() {
-  $("calib-n-don").textContent = audioSamples.filter(x => x.mode === "D").length;
-  $("calib-n-ka").textContent = audioSamples.filter(x => x.mode === "K").length;
+  updateCalibButtons();
 }
 loadCalibrationData();
 fetchCalibrationFromCloud();
@@ -4546,11 +4769,14 @@ $("btn-fullscreen").onclick = () => {
 
 $("btn-open-settings").onclick = () => {
   playSfx("click");
+  updateThresholdUI();
+  updateCalibButtons();
   $("modal-settings").classList.add("active");
 };
 $("btn-close-settings").onclick = () => {
   playSfx("click");
   calibMode = null;
+  updateCalibButtons();
   $("modal-settings").classList.remove("active");
 };
 
@@ -4561,33 +4787,83 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     btn.classList.add("active");
     $(btn.dataset.tab).classList.add("active");
+    updateThresholdUI();
+    updateCalibButtons();
   };
 });
 
 $("btn-modal-start-mic").onclick = () => initMicrophone();
 
 $("slider-threshold").oninput = e => {
-  threshold = +e.target.value;
-  $("meter-th-line").style.left = Math.min(100, (threshold / 0.3) * 100) + "%";
+  thresholdMaster = +e.target.value;
+  thresholdDon = thresholdMaster * 1.15;
+  thresholdKa = Math.max(0.004, thresholdMaster * 0.35);
+  dynamicDonThreshold = thresholdDon;
+  updateThresholdUI();
   saveCalibrationData();
 };
-$("meter-th-line").style.left = (threshold / 0.3) * 100 + "%";
+
+$("slider-threshold-don").oninput = e => {
+  thresholdDon = +e.target.value;
+  dynamicDonThreshold = thresholdDon;
+  updateThresholdUI();
+  saveCalibrationData();
+};
+
+$("slider-threshold-ka").oninput = e => {
+  thresholdKa = +e.target.value;
+  updateThresholdUI();
+  saveCalibrationData();
+};
+
+$("btn-toggle-advanced-threshold").onclick = () => {
+  const box = $("advanced-threshold-box");
+  const isHidden = box.style.display === "none";
+  box.style.display = isHidden ? "block" : "none";
+  $("btn-toggle-advanced-threshold").textContent = isHidden ? "🔼 收合進階獨立門檻微調" : "⚙️ 展開進階個別門檻微調";
+};
 
 $("btn-calib-don").onclick = () => {
   if (!mediaStream) initMicrophone();
-  calibMode = "D";
-  $("calib-live-result").textContent = "請敲鼓面 (咚) 5~10 下...";
+  if (calibMode === "D") {
+    calibMode = null;
+    playSfx("click");
+    $("calib-live-result").textContent = "已停止錄製咚，可點擊試打測試！";
+  } else {
+    calibMode = "D";
+    playSfx("click");
+    $("calib-live-result").textContent = "請敲鼓面 (咚) 5~8 下 (敲滿 5 筆自動完成)...";
+  }
+  updateCalibButtons();
 };
+
 $("btn-calib-ka").onclick = () => {
   if (!mediaStream) initMicrophone();
-  calibMode = "K";
-  $("calib-live-result").textContent = "請敲鼓邊 (咔) 5~10 下...";
+  if (calibMode === "K") {
+    calibMode = null;
+    playSfx("click");
+    $("calib-live-result").textContent = "已停止錄製咔，可點擊試打測試！";
+  } else {
+    calibMode = "K";
+    playSfx("click");
+    $("calib-live-result").textContent = "請敲鼓邊 (咔) 5~8 下 (敲滿 5 筆自動完成)...";
+  }
+  updateCalibButtons();
 };
+
+$("btn-calib-stop-all").onclick = () => {
+  calibMode = null;
+  playSfx("click");
+  updateCalibButtons();
+  $("calib-live-result").textContent = "已結束錄製，目前處於即時試打模式！";
+};
+
 $("btn-calib-reset").onclick = () => {
   calibMode = null;
   audioSamples = [];
   saveCalibrationData();
   updateCalibUI();
+  updateCalibButtons();
   $("calib-live-result").textContent = "已清除本機校準，可重新敲擊錄製";
 };
 $("btn-calib-fetch-cloud").onclick = async () => {

@@ -300,9 +300,14 @@ function getCalibrationFromSheet() {
   } catch (e) {
     samples = [];
   }
+  const thMaster = Number(lastRow[1]) || 0.035;
+  const thDon = lastRow.length > 5 && Number(lastRow[5]) ? Number(lastRow[5]) : thMaster * 1.15;
+  const thKa = lastRow.length > 6 && Number(lastRow[6]) ? Number(lastRow[6]) : Math.max(0.004, thMaster * 0.35);
   return {
     updated_at: lastRow[0],
-    threshold: Number(lastRow[1]) || 0.05,
+    threshold: thMaster,
+    thresholdDon: thDon,
+    thresholdKa: thKa,
     offsetMs: Number(lastRow[2]) || 0,
     samples: samples
   };
@@ -317,12 +322,17 @@ function saveCalibrationToSheet(calib) {
     sheet = ss.getSheetByName(SHEET_NAME_CALIB);
   }
   const samplesJson = JSON.stringify(calib.samples || []);
+  const thMaster = calib.threshold || 0.035;
+  const thDon = calib.thresholdDon || thMaster * 1.15;
+  const thKa = calib.thresholdKa || Math.max(0.004, thMaster * 0.35);
   sheet.appendRow([
     new Date(),
-    calib.threshold || 0.05,
+    thMaster,
     calib.offsetMs || 0,
     (calib.samples || []).length,
-    samplesJson
+    samplesJson,
+    thDon,
+    thKa
   ]);
   return calib;
 }
