@@ -229,6 +229,85 @@
     filter: invert(82%) sepia(51%) saturate(1024%) hue-rotate(346deg) brightness(102%) contrast(101%);
   }
 
+  /* 頂部 HUD 即時 BPM 控制小工具 */
+  .hud-bpm-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1b233d;
+    border: 2px solid #485786;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    user-select: none;
+    transition: border-color 0.14s ease;
+  }
+  .hud-bpm-pill:hover {
+    border-color: var(--gold);
+  }
+  .hud-bpm-value {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--gold);
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    min-width: 68px;
+    text-align: center;
+  }
+  .btn-hud-bpm-mini {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid #4a5c8c;
+    background: #2a365c;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    padding: 0;
+    line-height: 1;
+  }
+  .btn-hud-bpm-mini:hover {
+    background: var(--gold);
+    color: #1a223c;
+    border-color: var(--gold);
+    transform: scale(1.1);
+  }
+  .btn-hud-bpm-mini:active {
+    transform: scale(0.92);
+  }
+
+  /* 速度變更即時浮動通知 */
+  .bpm-toast-popup {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-14px) scale(0.92);
+    background: rgba(18, 24, 45, 0.96);
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 8px 22px;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--gold);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1), transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .bpm-toast-popup.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
   /* Kenney 街機立體方形圖示按鈕 */
   .kenney-icon-btn {
     width: 44px;
@@ -1105,6 +1184,101 @@
     line-height: 1.45;
   }
 
+  /* 歌曲速度 (BPM) 快速調整列 */
+  .song-bpm-toolbar {
+    background: #1b233e;
+    border: 2px solid #485786;
+    border-radius: 16px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 1040px;
+    width: 100%;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .bpm-tool-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bpm-tool-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .bpm-tool-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--text-light);
+  }
+  .bpm-tool-title strong {
+    color: var(--gold);
+    font-size: 24px;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+  }
+  .bpm-tool-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .bpm-tool-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-bpm-ctrl {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    border: 1px solid #5a6e9f;
+    background: #273356;
+    color: var(--text-light);
+  }
+  .btn-bpm-ctrl:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .btn-bpm-ctrl:active {
+    transform: translateY(1px);
+  }
+  .btn-bpm-ctrl.down {
+    color: #70a1ff;
+    border-color: #4b6584;
+  }
+  .btn-bpm-ctrl.down:hover {
+    background: #1e3799;
+    color: #ffffff;
+    border-color: #70a1ff;
+  }
+  .btn-bpm-ctrl.up {
+    color: #ff6b81;
+    border-color: #6d4255;
+  }
+  .btn-bpm-ctrl.up:hover {
+    background: #b71540;
+    color: #ffffff;
+    border-color: #ff6b81;
+  }
+  .btn-bpm-ctrl.reset {
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border-color: #3f4d74;
+    padding: 8px 12px;
+  }
+  .btn-bpm-ctrl.reset:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
   /* Kenney 巨型立體開始按鈕 */
   .action-bar-bottom {
     display: flex;
@@ -1880,6 +2054,12 @@
         <img src="assets/icons/musical-notes.svg" alt="">
         <span id="hud-song-title">十鼓迎賓練習曲</span>
       </div>
+      <!-- 頂部 HUD 即時 BPM 控制小工具 -->
+      <div class="hud-bpm-pill" id="hud-bpm-widget" title="點擊按鈕或按鍵盤 ↑ / ↓ 即時調整速度 (±5)">
+        <button class="btn-hud-bpm-mini" id="btn-hud-bpm-down" title="減速 5 BPM (鍵盤 ↓)">−</button>
+        <span class="hud-bpm-value" id="hud-bpm-display">92 BPM</span>
+        <button class="btn-hud-bpm-mini" id="btn-hud-bpm-up" title="加速 5 BPM (鍵盤 ↑)">+</button>
+      </div>
     </div>
 
     <div class="hud-right">
@@ -1902,6 +2082,9 @@
       </button>
     </div>
   </header>
+
+  <!-- 速度變更即時浮動通知 Toast -->
+  <div class="bpm-toast-popup" id="bpm-toast-popup">⚡ 演奏速度：92 BPM</div>
 
   <!-- 核心遊玩舞台 -->
   <main class="stage-arena">
@@ -2035,6 +2218,22 @@
     </div>
 
     <div class="song-card-list" id="song-card-list"></div>
+
+    <!-- 歌曲速度 (BPM) 快速調整列 (支援方向鍵 ↑/↓ 自由以 5 加減速) -->
+    <div class="song-bpm-toolbar" id="song-bpm-toolbar">
+      <div class="bpm-tool-info">
+        <span class="bpm-tool-icon">⚡</span>
+        <div class="bpm-tool-texts">
+          <div class="bpm-tool-title">歌曲演奏速度：<strong id="select-bpm-val">92</strong> <span class="bpm-unit">BPM</span></div>
+          <div class="bpm-tool-desc" id="select-bpm-hint">原速 92 · 按方向鍵 ↑ / ↓ 自由以 5 加減速（亦可在遊戲中隨時調整）</div>
+        </div>
+      </div>
+      <div class="bpm-tool-actions">
+        <button class="btn-bpm-ctrl down" id="btn-select-bpm-down" title="減速 5 BPM (鍵盤 ↓)">−5 慢練</button>
+        <button class="btn-bpm-ctrl reset" id="btn-select-bpm-reset" title="重設為歌曲預設速度">恢復原速</button>
+        <button class="btn-bpm-ctrl up" id="btn-select-bpm-up" title="加速 5 BPM (鍵盤 ↑)">+5 快打</button>
+      </div>
+    </div>
 
     <div class="action-bar-bottom">
       <button class="kenney-cta-btn blue" id="btn-home-calib">
@@ -2564,13 +2763,14 @@ window.addEventListener("pointerdown", () => {
 function playSfx(name, when = 0, volume = 0.85) {
   const ctx = ensureAudioContext();
   const buf = SFX_BUFFERS[name];
-  if (!buf) return;
+  if (!buf) return null;
   const src = ctx.createBufferSource();
   const gain = ctx.createGain();
   src.buffer = buf;
   gain.gain.value = volume;
   src.connect(gain).connect(ctx.destination);
   src.start(when || ctx.currentTime);
+  return src;
 }
 
 // ==================== 2. 曲目資料庫與 Google 試算表連線 ====================
@@ -2581,6 +2781,7 @@ let SONGS = [
     id: "s01",
     title: "十鼓迎賓練習曲",
     bpm: 92,
+    originalBpm: 92,
     offset_ms: 0,
     beats_per_bar: 4,
     grid: 16,
@@ -2603,6 +2804,7 @@ let SONGS = [
     id: "s02",
     title: "小蜜蜂十鼓快打",
     bpm: 108,
+    originalBpm: 108,
     offset_ms: 0,
     beats_per_bar: 4,
     grid: 16,
@@ -2625,6 +2827,7 @@ let SONGS = [
     id: "s03",
     title: "雷霆戰鼓齊奏曲",
     bpm: 120,
+    originalBpm: 120,
     offset_ms: 0,
     beats_per_bar: 4,
     grid: 16,
@@ -2657,10 +2860,14 @@ function loadCachedSongs() {
           if (s.id === "s01" || s.id === "s02" || s.id === "s03") {
             s.offset_ms = 0;
           }
+          if (!s.originalBpm) s.originalBpm = s.bpm;
         });
         SONGS = parsed;
       }
     }
+    SONGS.forEach(s => {
+      if (!s.originalBpm) s.originalBpm = s.bpm;
+    });
   } catch (e) {
     console.warn("載入本機曲庫快取失敗", e);
   }
@@ -2675,6 +2882,9 @@ async function fetchSongsFromGoogleSheet() {
     const json = await res.json();
     if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
       SONGS = json.data;
+      SONGS.forEach(s => {
+        if (!s.originalBpm) s.originalBpm = s.bpm;
+      });
       localStorage.setItem("shigu_custom_songs", JSON.stringify(SONGS));
       renderSongCards();
       $("sync-status-text").textContent = `同步成功！已載入 ${SONGS.length} 首雲端曲目`;
@@ -3192,6 +3402,142 @@ function loadSong(song) {
   backdrop.className = "scenic-backdrop";
   if (song.theme === "fall") backdrop.classList.add("theme-fall");
   if (song.theme === "grass") backdrop.classList.add("theme-grass");
+
+  updateBpmUI();
+}
+
+// ==================== 4.2 歌曲速度 (BPM) 動態調速系統 ====================
+let countInAudioSources = [];
+let bpmToastTimer = null;
+
+function showBpmToast(newBpm, delta) {
+  const toast = $("bpm-toast-popup");
+  if (!toast) return;
+  const isUp = delta > 0;
+  const icon = isUp ? "⚡" : "🐌";
+  const sign = delta > 0 ? `+${delta}` : `${delta}`;
+  toast.textContent = `${icon} 演奏速度：${newBpm} BPM (${sign})`;
+  toast.classList.add("show");
+  clearTimeout(bpmToastTimer);
+  bpmToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1100);
+}
+
+function updateBpmUI() {
+  const song = SONGS[currentSongIndex];
+  if (!song) return;
+  if (!song.originalBpm) song.originalBpm = song.bpm;
+
+  // 1. 更新選曲畫面工具列
+  if ($("select-bpm-val")) $("select-bpm-val").textContent = song.bpm;
+  if ($("select-bpm-hint")) {
+    if (song.bpm === song.originalBpm) {
+      $("select-bpm-hint").textContent = `原速 ${song.originalBpm} · 按方向鍵 ↑ / ↓ 自由以 5 加減速（亦可在遊戲中隨時調整）`;
+    } else {
+      const diff = song.bpm - song.originalBpm;
+      $("select-bpm-hint").textContent = `原速 ${song.originalBpm} · 目前 ${diff > 0 ? "+" : ""}${diff} BPM · 支援隨時按 ↑/↓ 調整`;
+    }
+  }
+
+  // 2. 更新頂部街機 HUD 狀態
+  if ($("hud-bpm-display")) {
+    $("hud-bpm-display").textContent = `${song.bpm} BPM`;
+  }
+
+  // 3. 更新選曲清單卡片上的 BPM 標籤
+  const cards = document.querySelectorAll(".song-card");
+  if (cards[currentSongIndex]) {
+    const pill = cards[currentSongIndex].querySelector(".bpm-pill");
+    if (pill) pill.textContent = `BPM ${song.bpm}`;
+  }
+}
+
+function rescheduleCountIn(now, oldBpm, newBpm, ratio) {
+  const song = SONGS[currentSongIndex];
+  if (!song) return;
+  const countInBeats = song.beats_per_bar || 4;
+  const newSecPerBeat = 60 / newBpm;
+
+  // 停止尚未發聲的預備拍音效
+  countInAudioSources.forEach(item => {
+    if (item.scheduledTime > now) {
+      try { item.src.stop(); } catch (e) {}
+    }
+  });
+  countInAudioSources = [];
+
+  // 預備拍剩餘秒數依比例無縫縮放
+  const remTime = (gameStartTime - now) * ratio;
+  gameStartTime = now + remTime;
+
+  // 從新 gameStartTime 往前逆推重排剩餘拍子的節拍聲
+  let clickTime = gameStartTime - newSecPerBeat;
+  let beatIndex = countInBeats - 1;
+  while (clickTime > now + 0.03 && beatIndex >= 0) {
+    const src = playSfx(beatIndex === 0 ? "metroHigh" : "metroLow", clickTime, 0.75);
+    if (src) countInAudioSources.push({ src, scheduledTime: clickTime });
+    clickTime -= newSecPerBeat;
+    beatIndex--;
+  }
+}
+
+function adjustBpm(delta) {
+  const song = SONGS[currentSongIndex];
+  if (!song) return;
+  if (!song.originalBpm) song.originalBpm = song.bpm;
+
+  const oldBpm = song.bpm;
+  const newBpm = Math.max(40, Math.min(240, oldBpm + delta));
+  if (newBpm === oldBpm) return;
+
+  const ratio = oldBpm / newBpm;
+  song.bpm = newBpm;
+
+  // 1. 更新 UI 與提示
+  updateBpmUI();
+
+  // 2. 若遊戲進行中，立即動態換算音符軌道
+  if (gameState === "PLAYING") {
+    const now = sfxCtx ? sfxCtx.currentTime : performance.now() / 1000;
+    const elapsed = now - gameStartTime;
+
+    if (elapsed >= 0) {
+      // 縮放所有進行中的音符時間，使其以目前打擊線 (elapsed) 為錨點平滑縮放
+      for (const note of activeNotes) {
+        if (note.state === "active") {
+          note.t = elapsed + (note.t - elapsed) * ratio;
+        }
+      }
+      for (let i = 0; i < barLines.length; i++) {
+        barLines[i] = elapsed + (barLines[i] - elapsed) * ratio;
+      }
+    } else {
+      // 預備拍期間：音符相對於歌曲起點 (elapsed = 0) 縮放
+      for (const note of activeNotes) {
+        note.t = note.t * ratio;
+      }
+      for (let i = 0; i < barLines.length; i++) {
+        barLines[i] = barLines[i] * ratio;
+      }
+      rescheduleCountIn(now, oldBpm, newBpm, ratio);
+    }
+    showBpmToast(newBpm, delta);
+  } else {
+    if ($("modal-section-practice") && $("modal-section-practice").classList.contains("active")) {
+      openSectionPracticeModal(song);
+    }
+    showBpmToast(newBpm, delta);
+  }
+
+  playSfx("click");
+}
+
+function resetBpm() {
+  const song = SONGS[currentSongIndex];
+  if (!song || !song.originalBpm) return;
+  const delta = song.originalBpm - song.bpm;
+  if (delta !== 0) adjustBpm(delta);
 }
 
 // ==================== 4.5 中央太鼓音波討伐怪獸戰鬥系統 ====================
@@ -3621,12 +3967,16 @@ async function startGame() {
   $("phase-banner-icon").textContent = "⏱️";
   $("phase-banner-text").textContent = `預備拍：1 / ${countInBeats}`;
 
+  countInAudioSources = [];
   for (let i = 0; i < countInBeats; i++) {
-    playSfx(i === 0 ? "metroHigh" : "metroLow", now + leadInTime + i * secPerBeat, 0.75);
+    const clickTime = now + leadInTime + i * secPerBeat;
+    const src = playSfx(i === 0 ? "metroHigh" : "metroLow", clickTime, 0.75);
+    if (src) countInAudioSources.push({ src, scheduledTime: clickTime });
   }
   // 第 4 預備拍結束後的下一個正拍，即為第 1 小節第 1 拍 (零延遲無縫對齊)
   gameStartTime = now + leadInTime + countInBeats * secPerBeat;
   lastFrameTime = performance.now();
+  updateBpmUI();
   requestAnimationFrame(gameLoop);
 }
 
@@ -4087,6 +4437,18 @@ window.addEventListener("keydown", e => {
   if ($("modal-editor") && $("modal-editor").classList.contains("active")) return;
   if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
 
+  // 快捷鍵：上下方向鍵自由調整歌曲速度 (以 5 為單位加減速)
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    adjustBpm(5);
+    return;
+  }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    adjustBpm(-5);
+    return;
+  }
+
   const key = e.key.toLowerCase();
   const now = sfxCtx ? sfxCtx.currentTime : performance.now() / 1000;
   if (key === "f" || key === "j") {
@@ -4103,6 +4465,7 @@ function renderSongCards() {
   const container = $("song-card-list");
   container.innerHTML = "";
   SONGS.forEach((song, idx) => {
+    if (!song.originalBpm) song.originalBpm = song.bpm;
     const card = document.createElement("div");
     card.className = "song-card" + (idx === currentSongIndex ? " selected" : "");
     let starsHtml = "";
@@ -4118,7 +4481,7 @@ function renderSongCards() {
         <img src="${song.mascot}" class="song-char-thumb" alt="">
       </div>
       <div class="song-meta-pills">
-        <span class="meta-pill">BPM ${song.bpm}</span>
+        <span class="meta-pill bpm-pill">BPM ${song.bpm}</span>
         <span class="meta-pill">${song.pattern.length} 小節</span>
         <span class="meta-pill">${song.beats_per_bar}/4 拍</span>
       </div>
@@ -4130,11 +4493,20 @@ function renderSongCards() {
       card.classList.add("selected");
       currentSongIndex = idx;
       loadSong(SONGS[idx]);
+      updateBpmUI();
     };
     container.appendChild(card);
   });
+  updateBpmUI();
 }
 renderSongCards();
+
+// 速度 (BPM) 調整按鈕事件綁定
+$("btn-select-bpm-down").onclick = () => adjustBpm(-5);
+$("btn-select-bpm-up").onclick = () => adjustBpm(5);
+$("btn-select-bpm-reset").onclick = () => resetBpm();
+$("btn-hud-bpm-down").onclick = () => adjustBpm(-5);
+$("btn-hud-bpm-up").onclick = () => adjustBpm(5);
 
 $("btn-start-game").onclick = () => { playSfx("click"); startGame(); };
 $("btn-open-songs").onclick = () => {
