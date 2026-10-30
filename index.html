@@ -2457,6 +2457,18 @@
           </div>
         </div>
 
+        <div class="row-field" style="background:#151c33; border-color:#3a476f; padding: 12px 18px; margin-top: 8px;">
+          <div style="flex:1; margin-right:12px;">
+            <b style="color:#ffd32a; font-size:13px;">🔗 Google 試算表 Web App 網址配置</b>
+            <div style="font-size: 12px; color: var(--text-dim);">可自由切換一般公開網址或教育局專屬網址</div>
+            <input type="text" id="input-gas-api-url" style="width: 100%; box-sizing: border-box; margin-top: 6px; padding: 6px 10px; font-size: 12px; background: #0c0f1d; border: 1px solid #36436e; color: #ced6e0; border-radius: 6px;" />
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn-action" id="btn-set-url-standard" style="font-size:11px; padding:4px 10px;">切換一般公開網址</button>
+            <button class="btn-action" id="btn-set-url-domain" style="font-size:11px; padding:4px 10px;">切換教育局網域網址</button>
+          </div>
+        </div>
+
         <div style="font-size: 13px; color: var(--gold); background: rgba(255, 211, 42, 0.1); border: 1px solid rgba(255, 211, 42, 0.35); padding: 8px 14px; border-radius: 10px; margin-top: 4px;">
           💡 雲端自動讀取：開啟網頁時會自動從 Google 試算表雲端下載最新特徵並存於本機。老師只要在一台電腦校準並上傳雲端，全班所有裝置皆可自動套用！
         </div>
@@ -2833,7 +2845,39 @@ function playSfx(name, when = 0, volume = 0.85) {
 }
 
 // ==================== 2. 曲目資料庫與 Google 試算表連線 ====================
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz9-zwSunT8vATxGeuuJ23tYd1fJs58C7cfXhgbVvJS7jX_KBgYZzVVQtowqnFE5bDh/exec";
+const DEFAULT_GAS_API_URL = "https://script.google.com/macros/s/AKfycbxqSXU5ZEe1hB_xBdxqdtY8j4urXapvIQoEKH4PpnCC253UmYeeQPQQhbxGFDwRh-0P/exec";
+const DOMAIN_GAS_API_URL = "https://script.google.com/a/macros/hjes.tn.edu.tw/s/AKfycbxqSXU5ZEe1hB_xBdxqdtY8j4urXapvIQoEKH4PpnCC253UmYeeQPQQhbxGFDwRh-0P/exec";
+
+function getGasApiUrl() {
+  return localStorage.getItem("drum_gas_api_url") || DEFAULT_GAS_API_URL;
+}
+
+let GAS_API_URL = getGasApiUrl();
+
+// 支援雙通道備援請求 Google Apps Script
+async function fetchFromGas(action) {
+  const currentUrl = getGasApiUrl();
+  const sep = currentUrl.includes("?") ? "&" : "?";
+  try {
+    const res = await fetch(currentUrl + sep + "action=" + action, { mode: "cors" });
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    if (!localStorage.getItem("drum_gas_api_url") && currentUrl === DEFAULT_GAS_API_URL) {
+      try {
+        const altRes = await fetch(DOMAIN_GAS_API_URL + "?action=" + action, { mode: "cors" });
+        const altJson = await altRes.json();
+        localStorage.setItem("drum_gas_api_url", DOMAIN_GAS_API_URL);
+        GAS_API_URL = DOMAIN_GAS_API_URL;
+        if ($("input-gas-api-url")) $("input-gas-api-url").value = DOMAIN_GAS_API_URL;
+        return altJson;
+      } catch (e2) {
+        throw err;
+      }
+    }
+    throw err;
+  }
+}
 
 let SONGS = [
   {
@@ -2937,8 +2981,7 @@ loadCachedSongs();
 async function fetchSongsFromGoogleSheet() {
   $("sync-status-text").textContent = "正在連線 Google 試算表同步曲目...";
   try {
-    const res = await fetch(GAS_API_URL + "?action=getSongs", { mode: "cors" });
-    const json = await res.json();
+    const json = await fetchFromGas("getSongs");
     if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
       SONGS = json.data;
       SONGS.forEach(s => {
@@ -2961,7 +3004,7 @@ async function fetchSongsFromGoogleSheet() {
 // 儲存曲目至 Google 試算表
 async function saveSongToGoogleSheet(song) {
   try {
-    const res = await fetch(GAS_API_URL, {
+    const res = await fetch(getGasApiUrl(), {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
@@ -3128,8 +3171,7 @@ function loadCalibrationData() {
 async function fetchCalibrationFromCloud() {
   if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "正在檢查雲端試算表最新鼓聲樣本...";
   try {
-    const res = await fetch(GAS_API_URL + "?action=getCalibration", { mode: "cors" });
-    const json = await res.json();
+    const json = await fetchFromGas("getCalibration");
     if (json && json.status === "success" && json.data && Array.isArray(json.data.samples) && json.data.samples.length > 0) {
       audioSamples = json.data.samples;
       if (typeof json.data.thresholdDon === "number") thresholdDon = json.data.thresholdDon;
@@ -3182,7 +3224,7 @@ async function saveCalibrationToCloud() {
         updated_at: new Date().toISOString()
       }
     };
-    await fetch(GAS_API_URL, {
+    await fetch(getGasApiUrl(), {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
@@ -4874,6 +4916,37 @@ $("btn-calib-save-cloud").onclick = async () => {
   playSfx("click");
   await saveCalibrationToCloud();
 };
+
+if ($("input-gas-api-url")) {
+  $("input-gas-api-url").value = getGasApiUrl();
+  $("input-gas-api-url").onchange = () => {
+    const val = $("input-gas-api-url").value.trim();
+    if (val) {
+      localStorage.setItem("drum_gas_api_url", val);
+      GAS_API_URL = val;
+    }
+  };
+}
+if ($("btn-set-url-standard")) {
+  $("btn-set-url-standard").onclick = async () => {
+    playSfx("click");
+    localStorage.setItem("drum_gas_api_url", DEFAULT_GAS_API_URL);
+    GAS_API_URL = DEFAULT_GAS_API_URL;
+    if ($("input-gas-api-url")) $("input-gas-api-url").value = DEFAULT_GAS_API_URL;
+    alert("已切換為標準公開網址！正在嘗試同步雲端...");
+    await fetchCalibrationFromCloud();
+  };
+}
+if ($("btn-set-url-domain")) {
+  $("btn-set-url-domain").onclick = async () => {
+    playSfx("click");
+    localStorage.setItem("drum_gas_api_url", DOMAIN_GAS_API_URL);
+    GAS_API_URL = DOMAIN_GAS_API_URL;
+    if ($("input-gas-api-url")) $("input-gas-api-url").value = DOMAIN_GAS_API_URL;
+    alert("已切換為臺南市教育局網域網址！正在嘗試同步雲端...");
+    await fetchCalibrationFromCloud();
+  };
+}
 
 // 16 拍節拍器延遲自動測定
 $("btn-run-latency-test").onclick = async () => {
