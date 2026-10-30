@@ -4892,6 +4892,12 @@ $("btn-calib-don").onclick = () => {
     playSfx("click");
     $("calib-live-result").textContent = "已停止錄製咚，可點擊試打測試！";
   } else {
+    // 若原先已收集滿咚樣本，重新錄製時清空舊咚樣本，重新錄製 5 筆最新敲擊
+    if (audioSamples.filter(x => x.mode === "D").length >= 5) {
+      audioSamples = audioSamples.filter(x => x.mode !== "D");
+      saveCalibrationData();
+      updateCalibUI();
+    }
     calibMode = "D";
     playSfx("click");
     $("calib-live-result").textContent = "請敲鼓面 (咚) 5~8 下 (敲滿 5 筆自動完成)...";
@@ -4906,6 +4912,12 @@ $("btn-calib-ka").onclick = () => {
     playSfx("click");
     $("calib-live-result").textContent = "已停止錄製咔，可點擊試打測試！";
   } else {
+    // 若原先已收集滿咔樣本，重新錄製時清空舊咔樣本，重新錄製 5 筆最新敲擊
+    if (audioSamples.filter(x => x.mode === "K").length >= 5) {
+      audioSamples = audioSamples.filter(x => x.mode !== "K");
+      saveCalibrationData();
+      updateCalibUI();
+    }
     calibMode = "K";
     playSfx("click");
     $("calib-live-result").textContent = "請敲鼓邊 (咔) 5~8 下 (敲滿 5 筆自動完成)...";
