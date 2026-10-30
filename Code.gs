@@ -133,8 +133,8 @@ function initSheetsIfNeeded() {
   let calibSheet = ss.getSheetByName(SHEET_NAME_CALIB);
   if (!calibSheet) {
     calibSheet = ss.insertSheet(SHEET_NAME_CALIB);
-    calibSheet.appendRow(['更新時間', '音量門檻', '延遲補償ms', '樣本數量', '校準特徵 JSON']);
-    calibSheet.getRange(1, 1, 1, 5).setBackground('#2b3558').setFontColor('#ffd32a').setFontWeight('bold');
+    calibSheet.appendRow(['更新時間', '基準門檻', '延遲補償ms', '樣本數量', '校準特徵 JSON', '鼓面門檻Don', '鼓邊門檻Ka']);
+    calibSheet.getRange(1, 1, 1, 7).setBackground('#2b3558').setFontColor('#ffd32a').setFontWeight('bold');
   }
 }
 

@@ -3211,7 +3211,7 @@ async function saveCalibrationToCloud() {
     alert("目前尚未錄製任何咚或咔樣本，請先錄製後再上傳！");
     return false;
   }
-  if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "正在同步發送至 Google 試算表雲端...";
+  if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "正在發送至 Google 試算表雲端並驗證寫入...";
   try {
     const payload = {
       action: "saveCalibration",
@@ -3231,12 +3231,32 @@ async function saveCalibrationToCloud() {
       body: JSON.stringify(payload)
     });
     saveCalibrationData();
-    playSfx("clear");
+
+    // 等候 1.5 秒讓 Google 試算表寫入完成，隨後自動拉取驗證
+    await new Promise(r => setTimeout(r, 1500));
+    let verified = false;
+    try {
+      const checkJson = await fetchFromGas("getCalibration");
+      if (checkJson && checkJson.status === "success" && checkJson.data && Array.isArray(checkJson.data.samples) && checkJson.data.samples.length > 0) {
+        verified = true;
+      }
+    } catch (e) {
+      verified = false;
+    }
+
     const nDon = audioSamples.filter(x => x.mode === "D").length;
     const nKa = audioSamples.filter(x => x.mode === "K").length;
-    if ($("calib-cloud-status")) $("calib-cloud-status").textContent = `☁️ 已同步至試算表 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
-    alert(`成功同步！\n已將 ${nDon} 筆咚與 ${nKa} 筆咔樣本儲存至 Google 試算表。\n其他學生或裝置開啟此網頁時將自動讀取這組特徵。`);
-    return true;
+
+    if (verified) {
+      playSfx("clear");
+      if ($("calib-cloud-status")) $("calib-cloud-status").textContent = `☁️ 已驗證成功寫入試算表 (咚 ${nDon} 筆, 咔 ${nKa} 筆)`;
+      alert(`🎉 成功同步並驗證！\n已將 ${nDon} 筆咚與 ${nKa} 筆咔樣本成功存入 Google 試算表「鼓聲校準特徵庫」。\n其他電腦或裝置重整網頁即可自動讀取！`);
+      return true;
+    } else {
+      if ($("calib-cloud-status")) $("calib-cloud-status").textContent = "⚠️ 上傳請求已送出，但試算表尚未建立特徵庫（請更新 Apps Script）";
+      alert("⚠️ 試算表尚未成功寫入！\n原因：您 Google 試算表的 Apps Script 編輯器內尚未貼上最新版的 Code.gs（或尚未建立新版本部署）。\n請先將最新程式碼貼至 Apps Script 並部署新版本！");
+      return false;
+    }
   } catch (err) {
     alert("上傳雲端失敗，請確認網路連線或試算表共用權限。");
     return false;
